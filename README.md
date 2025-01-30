@@ -29,7 +29,7 @@ The official implementation of paper "Large Connectome Model: An fMRI Foundation
 │   ├── PathNN.py                          # Not used
 │   ├── utils.py                           # Util codes for model building
 │   └── vanilla_model.py                   # Not used
-├── model_weights                          # Will be created to store model weights
+├── model_weights                          # Put folders of model weights under this dir
 ├── parse_log_decoderVSmlp.py              # Parse log files of exp as a markdown table
 ├── plot_param_vs_layern.py                # Not used
 ├── plot_surfIce.py                        # Scripts for brain surface attention visualization on software *Surf Ice*
