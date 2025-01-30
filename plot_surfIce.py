@@ -1,0 +1,22 @@
+### Surf Ice scripts
+import gl
+gl.resetdefaults()
+gl.meshloadbilateral('mni152_2009.mz3')
+gl.clipazimuthelevation(0.45, 85, -5)
+gl.nodeload(r'D:\softwares\surfice_windows\Surf_Ice\BrainNet\AAL116_ICML25_ADNI_CN.node')
+gl.nodesize(10, 1)
+# gl.edgesize(2, 1)
+# gl.nodehemisphere(0)
+gl.azimuthelevation(250, 35)
+# gl.edgecolor('red-yellow',1)
+gl.nodecolor('hot',1)
+# gl.nodethresh(1.0,1.0)
+# gl.edgethresh(0,1.0)
+gl.meshcurv()
+gl.overlayminmax(1,-1,1)
+gl.overlaycolorname(1,'surface')
+gl.overlayinvert(1,1)
+gl.overlaytranslucent(1, 1)
+gl.overlayopacity(1, 50)
+gl.overlaytransparencyonbackground(0.5)
+

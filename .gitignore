@@ -1,0 +1,8 @@
+__pycache__/
+data/
+figs/
+logs/
+logs2/
+model_weights/
+resources/
+nohup.out
