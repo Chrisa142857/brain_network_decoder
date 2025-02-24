@@ -7,11 +7,9 @@ The official implementation of paper "Large Connectome Model: An fMRI Foundation
 ```
 ├── data                                   # Will be created when pre-loading data
 ├── datasets.py                            # The class of datasets and dataloaders
-├── decoder_vs_mlp_in_markdown.md          # A markdown table parsed from log files of exp
+├── logs3_in_markdown.md                   # A markdown table of experimental results parsed from log files
 ├── finetune_lbnm.py                       # Finetune LCM
-├── get_sex_age_score.py                   # Parse sex and age score in log files
-├── lineplot_modelScale.py                 # Line plots for model scalability
-├── logs                                   # Will be created when running exp
+├── logs3                                  # Will be created when running exp
 ├── md2latex.py                            # Convert markdown table to Latex
 ├── models                             
 │   ├── BNT                                # BNT codes migrated from the official github repo
@@ -30,22 +28,19 @@ The official implementation of paper "Large Connectome Model: An fMRI Foundation
 │   ├── utils.py                           # Util codes for model building
 │   └── vanilla_model.py                   # Not used
 ├── model_weights                          # Put folders of model weights under this dir
-├── parse_log_decoderVSmlp.py              # Parse log files of exp as a markdown table
-├── plot_param_vs_layern.py                # Not used
-├── plot_surfIce.py                        # Scripts for brain surface attention visualization on software *Surf Ice*
+├── parse_logs3.py                         # Parse log files of exp as a markdown table
 ├── print_model_scale.py                   # Show model parameter number
-├── save_attention_map.py                  # Extract cross-attention map of LCM
+├── save_attention_map.py                  # Extract BECA map
 ├── scripts                            
-│   ├── exp_script_finetine.sh             # Finetuning experiments
-│   ├── exp_script_finetune2.sh            # Finetuning experiments
-│   ├── exp_script_jiaxingData.sh          # Part of experiments in Table 1, 3, 4
-│   ├── exp_script_LBNM.sh                 # Part of experiments in Table 1, 3, 4
-│   ├── exp_script_modelScal_decoder.sh    # Part of experiments in Figure 6 and Table 2
-│   ├── exp_script_modelScale.sh           # Part of experiments in Figure 6 and Table 2
-│   ├── exp_script_modelScale_tesla.sh     # Part of experiments in Figure 6 and Table 2
-│   ├── exp_script_multiBackbone.sh        # Part of experiments in Table 1, 3, 4
-│   ├── exp_script_multiBackbone_tesla.sh  # Part of experiments in Table 1, 3, 4
-│   └── exp_scripts.sh                     # Part of experiments
+│   ├── exp_script_zeroshot.sh                  # Zero shot experiments    
+│   ├── exp_script_fewshot_randomDecoder.sh     # Few shot experiments
+│   ├── exp_script_fewshot_finetune.sh          # Few shot experiments
+│   ├── exp_script_fewshot_finetune2.sh         # Few shot experiments
+│   ├── exp_script_fewshot.sh                   # Few shot experiments
+│   ├── exp_script_finetune_baseline2.sh        # Few shot experiments
+│   ├── exp_script_ppmi2cls.sh                  # Experiments on PPMI
+│   └── exp_script_ppmi2cls_2.sh                # Experiments on PPMI
+├── zsl_lbnm.py                            # Zero shot learning LCM
 ├── trainval_lbnm.py                       # Pre-train LCM with multiple datasets
 └── trainval.py                            # Train models with single dataset
 ```
