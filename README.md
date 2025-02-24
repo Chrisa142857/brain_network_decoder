@@ -1,6 +1,6 @@
 ## Codes for Brain-Environment Cross-Attention (BECA).
 
-The official implementation of paper "Brain-Environment Cross-Attention (BECA) Meta-Matching: A New Perspective of Brain Connectome Zero-shot Learning".
+The official implementation of paper "Brain-Environment Cross-Attention (BECA) Meta-Matching: A New Perspective of Brain Connectome Zero-shot Learning". Pre-trained model weights can be found here [https://drive.google.com/drive/folders/1vEIB6qb5djrQXLuRYeLrkF2i27m4QNgo?usp=sharing](https://drive.google.com/drive/folders/1vEIB6qb5djrQXLuRYeLrkF2i27m4QNgo?usp=sharing).
 
 ### File structure
 
