@@ -67,7 +67,8 @@ class BNDecoder(nn.Module):
         ############################################
         if hasattr(self, 'finetune_query'):
             logits = logits[..., self.finetune_tokenid]
-            attn = attn[..., self.finetune_tokenid,:]
+            if return_cross_attn:
+                attn = attn[..., self.finetune_tokenid,:]
         if not return_cross_attn:
             return {'y': logits, 'sex': sex, 'age': age}
         else:

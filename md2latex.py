@@ -109,13 +109,139 @@ inpt='| 37 | none        | decoder8      | attrFC      | 65.50000+-21.40223 | 59
 | 42 | none        | decoder24     | attrFC      | 75.50000+-23.62320 | 71.87302+-27.41750 |\n\
 | | 86.999+-18.574 | 91.66667+-12.1335 |\n\
 '
+inpt='| 34 | noneKmeans            | 2datasetDecoder32 |   66.4884 |  69.6275 |  22.4247  | 22.5822  |\n\
+| 31 | noneKmeans            | 2datasetDecoder32 |   51.2621 |  46.4341 |   3.39112 |  3.43799  |\n\
+| 32 | noneKmeans            | 2datasetDecoder32 |      60   |  54.8112 |   10.4583 | 12.4224  |\n\
+| 32 | noneKmeans            | 2datasetDecoder32 |   70.2778 |  68.5161 |   11.7277 |  12.618  |\n\
+    '
+inpt='|  0 | bntFewShot001         | mlp1              |   56.7952 |  54.1868 |   6.11481 |  9.89686  |\n\
+|  4 | boltFewShot001        | mlp1              |   55.3246 |  53.9077 |   4.27174 |  4.95774  |\n\
+| 16 | neurodetourFewShot001 | mlp1              |   56.3116 |  53.9126 |   6.92752 |  6.2606   |\n\
+| 21 | noneFewShot001        | 6datasetDecoder32 |   57.0874 |  56.8901 |   5.10979 |  5.10776  |\n\
+|  1 | bntFewShot01          | mlp1              |   63.8959 |  63.588  |   5.53395 |  5.4137   |\n\
+|  5 | boltFewShot01         | mlp1              |   60.2846 |  60.0336 |   5.47573 |  5.78768  |\n\
+| 17 | neurodetourFewShot01  | mlp1              |   60.3836 |  58.5431 |   8.53665 | 12.087    |\n\
+| 23 | noneFewShot01         | 6datasetDecoder32 |   63.1068 |  62.4455 |   4.85437 |  5.74009  |\n\
+'
+inpt='|  2 | bntFewShot03          | mlp1              |   66.1451 |  65.7769 |   3.27427 |  3.12323  |\n\
+|  6 | boltFewShot03         | mlp1              |   66.0404 |  65.7015 |   4.2294  |  4.07512  |\n\
+| 18 | neurodetourFewShot03  | mlp1              |   62.628  |  62.5163 |   3.41114 |  3.35071  |\n\
+| 28 | noneFewShot03         | 6datasetDecoder32 |   66.9903 |  66.5698 |   4.50176 |  5.37492  |\n\
+|  3 | bntFewShot05          | mlp1              |   66.7295 |  66.4318 |   3.13096 |  3.04803  |\n\
+|  7 | boltFewShot05         | mlp1              |   64.387  |  64.3308 |   4.87597 |  4.8301   |\n\
+| 19 | neurodetourFewShot05  | mlp1              |   64.6897 |  64.77   |   4.10289 |  4.20326  |\n\
+| 29 | noneFewShot05         | 6datasetDecoder32 |   66.7961 |  66.5794 |   3.45991 |  3.5971   |\n\
+'
+inpt='|  0 | bntFewShot001         | mlp1              |   88.2896 |  82.9045 |   6.64454 |  9.53469 |\n\
+|  5 | boltFewShot001        | mlp1              |   88.2896 |  82.9045 |   6.64454 |  9.53469 |\n\
+| 20 | neurodetourFewShot001 | mlp1              |   88.2896 |  82.9045 |   6.64454 |  9.53469 |\n\
+| 26 | noneFewShot001        | 6datasetDecoder32 |   88.2896 |  82.9045 |   6.64454 |  9.53469 |\n\
+|  1 | bntFewShot01          | mlp1              |   88.2896 |  82.9045 |   6.64454 |  9.53469 |\n\
+|  6 | boltFewShot01         | mlp1              |   88.2896 |  82.9045 |   6.64454 |  9.53469 |\n\
+| 21 | neurodetourFewShot01  | mlp1              |   88.2896 |  82.9045 |   6.64454 |  9.53469 |\n\
+| 28 | noneFewShot01         | 6datasetDecoder32 |   89.771  |  85.6436 |   5.46889 |  7.85773 |\n\
+|  2 | bntFewShot03          | mlp1              |   88.2896 |  82.9045 |   6.64454 |  9.53469 |\n\
+|  7 | boltFewShot03         | mlp1              |   88.2896 |  82.9045 |   6.64454 |  9.53469 |\n\
+| 22 | neurodetourFewShot03  | mlp1              |   88.2896 |  82.9045 |   6.64454 |  9.53469 |\n\
+| 30 | noneFewShot03         | 6datasetDecoder32 |   90.5118 |  87.4895 |   4.15947 |  5.07941 |\n\
+|  3 | bntFewShot05          | mlp1              |   88.2896 |  82.9045 |   6.64454 |  9.53469 |\n\
+|  8 | boltFewShot05         | mlp1              |   88.2896 |  82.9045 |   6.64454 |  9.53469 |\n\
+| 23 | neurodetourFewShot05  | mlp1              |   88.2896 |  82.9045 |   6.64454 |  9.53469 |\n\
+| 31 | noneFewShot05         | 6datasetDecoder32 |   90.0107 |  87.6243 |   9.61842 | 12.5671  |\n\
+'
+inpt='|  0 | bntFewShot001         | mlp1              |   88.0107 |  82.8008 |  12.7502  | 18.0854  |\n\
+|  5 | boltFewShot001        | mlp1              |   86.8342 |  82.196  |  12.9934  | 18.1393  |\n\
+| 21 | neurodetourFewShot001 | mlp1              |   86.8342 |  83.0194 |  12.9934  | 18.0908  |\n\
+| 37 | noneFewShotv2001      | 6datasetDecoder32 |   86.0107 |  83.5743 |  16.5112  | 18.8443  |\n\
+|  1 | bntFewShot01          | mlp1              |   88.0107 |  82.8008 |  12.7502  | 18.0854  |\n\
+|  6 | boltFewShot01         | mlp1              |   85.6578 |  81.5508 |  13.7451  | 18.307   |\n\
+| 22 | neurodetourFewShot01  | mlp1              |   88.0107 |  82.8008 |  12.7502  | 18.0854  |\n\
+| 29 | noneFewShot01         | 6datasetDecoder32 |   89.771  |  85.6436 |   5.46889 |  7.85773 |\n\
+|  2 | bntFewShot03          | mlp1              |   88.0107 |  82.8008 |  12.7502  | 18.0854  |\n\
+|  7 | boltFewShot03         | mlp1              |   88.0107 |  82.8008 |  12.7502  | 18.0854  |\n\
+| 23 | neurodetourFewShot03  | mlp1              |   88.0107 |  82.8008 |  12.7502  | 18.0854  |\n\
+| 40 | noneFewShotv203       | 6datasetDecoder32 |   90.0107 |  86.5214 |   9.61842 | 12.7409  |\n\
+|  3 | bntFewShot05          | mlp1              |   88.0107 |  82.8008 |  12.7502  | 18.0854  |\n\
+|  8 | boltFewShot05         | mlp1              |   90.0107 |  86.5214 |   9.61842 | 12.7409  |\n\
+| 24 | neurodetourFewShot05  | mlp1              |   88.0107 |  82.8008 |  12.7502  | 18.0854  |\n\
+| 33 | noneFewShot05         | 6datasetDecoder32 |   90.0107 |  87.6243 |   9.61842 | 12.5671  |\n\
+|  4 | bntFewShot10          | mlp1              |   89.1872 |  84.9031 |  13.0441  | 18.6751  |\n\
+|  9 | boltFewShot10         | mlp1              |   88.0107 |  82.8008 |  12.7502  | 18.0854  |\n\
+| 25 | neurodetourFewShot10  | mlp1              |   88.0107 |  82.8008 |  12.7502  | 18.0854  |\n\
+| 36 | noneFewShot10         | 7datasetDecoder32 |   90.0107 |  88.3743 |   9.61842 | 11.8075  |\n\
+'
+inpt='|  0 | bntFewShot001         | mlp1              |      80   |  75.7143 |   11.1803 | 14.6424  |\n\
+|  4 | boltFewShot001        | mlp1              |      80   |  73.2381 |   11.1803 | 15.4648  |\n\
+| 20 | neurodetourFewShot001 | mlp1              |      75   |  72.8571 |   17.6777 | 18.3534  |\n\
+| 32 | noneFewShotv2001      | 2datasetDecoder32 |      75   |  70.381  |   17.6777 | 18.5452  |\n\
+|  1 | bntFewShot01          | mlp1              |      80   |  75.7143 |   11.1803 | 14.6424  |\n\
+|  5 | boltFewShot01         | mlp1              |      80   |  75.7143 |   20.9165 | 22.924   |\n\
+| 21 | neurodetourFewShot01  | mlp1              |      70   |  62.381  |   20.9165 | 24.5942  |\n\
+| 33 | noneFewShotv201       | 2datasetDecoder32 |      85   |  80.381  |   13.6931 | 18.2866  |\n\
+'
+inpt='|  5 | bntFewShotv2001         | mlp1              |   51.5238 | 75.7244  |  28.6025  | 15.9017  |\n\
+| 15 | boltFewShotv2001        | mlp1              |   40.5476 | 71.3974  |  28.8127  | 16.4559  |\n\
+| 36 | neurodetourFewShotv2001 | mlp1              |   51.1905 | 73.6891  |  23.901   | 14.1676  |\n\
+| 61 | noneFewShotv3001        | 6datasetDecoder32 |   71.881  | 61.9398  |  31.1412  | 31.0136  |\n\
+|  6 | bntFewShotv201          | mlp1              |   61.3571 | 75.7244  |  27.9832  | 15.9017  |\n\
+| 16 | boltFewShotv201         | mlp1              |   62.6905 | 69.4744  |  25.206   | 18.4082  |\n\
+| 37 | neurodetourFewShotv201  | mlp1              |   59.2143 | 75.1195  |  32.7101  | 15.6242  |\n\
+| 62 | noneFewShotv301         | 6datasetDecoder32 |   71.5476 | 75.3885  |  36.495   | 14.2821  |\n\
+|  7 | bntFewShotv203          | mlp1              |   65.3333 | 75.7244  |  24.41    | 15.9017  |\n\
+| 17 | boltFewShotv203         | mlp1              |   46.4762 | 75.7244  |  31.9595  | 15.9017  |\n\
+| 38 | neurodetourFewShotv203  | mlp1              |   61.8095 | 75.7244  |  16.379   | 15.9017  |\n\
+| 63 | noneFewShotv303         | 6datasetDecoder32 |   82.1667 | 71.1502  |  12.5499  | 16.4366  |\n\
+|  8 | bntFewShotv205          | mlp1              |   75.7381 | 75.9823  |  15.1229  | 12.7885  |\n\
+| 18 | boltFewShotv205         | mlp1              |   63.9524 | 77.4127  |  20.4399  | 14.0975  |\n\
+| 39 | neurodetourFewShotv205  | mlp1              |   62.5952 | 75.7244  |  25.5853  | 15.9017  |\n\
+| 64 | noneFewShotv305         | 6datasetDecoder32 |   89.9762 | 75.7244  |   7.94254 | 15.9017  |\n\
+|  9 | bntFewShotv210          | mlp1              |   77.1429 | 75.7244  |  29.7567  | 15.9017  |\n\
+| 19 | boltFewShotv210         | mlp1              |   68.0238 | 74.9244  |  26.8359  | 15.1751  |\n\
+| 40 | neurodetourFewShotv210  | mlp1              |   64.9762 | 76.0273  |  16.6046  | 16.0581  |\n\
+| 65 | noneFewShotv310         | 6datasetDecoder32 |   72.4286 | 70.9259  |  20.2748  | 13.8209  |\n\
+'
+inpt='|  4 | bntFewShotv2001         | mlp1              |   59.933  |  41.9203 |   5.72294 | 12.7164   |\n\
+| 13 | boltFewShotv2001        | mlp1              |   58.4204 |  47.7261 |   3.61457 |  6.46877  |\n\
+| 30 | neurodetourFewShotv2001 | mlp1              |   51.6491 |  45.7333 |   3.82715 | 12.624    |\n\
+| 53 | noneFewShotv3001        | 6datasetDecoder32 |   55.6336 |  54.063  |   4.91336 |  3.29559  |\n\
+|  5 | bntFewShotv201          | mlp1              |   61.5655 |  58.0683 |   1.85005 |  4.97213  |\n\
+| 14 | boltFewShotv201         | mlp1              |   61.8217 |  58.9679 |   5.70742 |  4.88749  |\n\
+| 31 | neurodetourFewShotv201  | mlp1              |   55.8005 |  54.1198 |   4.59634 |  6.73282  |\n\
+|  6 | bntFewShotv203          | mlp1              |   67.1319 |  65.1279 |   4.21172 |  4.58927  |\n\
+| 15 | boltFewShotv203         | mlp1              |   59.5971 |  61.9279 |   5.54696 |  4.63179  |\n\
+| 32 | neurodetourFewShotv203  | mlp1              |   60.9483 |  60.0976 |   2.32033 |  3.62525  |\n\
+|  7 | bntFewShotv205          | mlp1              |   67.5458 |  62.5818 |   4.25228 |  4.51972  |\n\
+| 16 | boltFewShotv205         | mlp1              |   63.2508 |  63.1241 |   3.59835 |  2.80519  |\n\
+| 33 | neurodetourFewShotv205  | mlp1              |   60.128  |  60.2251 |   3.58945 |  2.76905  |\n\
+|  8 | bntFewShotv210          | mlp1              |   72.6264 |  66.5012 |   3.5071  |  2.7541   |\n\
+| 17 | boltFewShotv210         | mlp1              |   64.0545 |  64.4052 |   3.86023 |  1.9659   |\n\
+| 34 | neurodetourFewShotv210  | mlp1              |   64.5341 |  65.0429 |   6.27768 |  5.13106  |\n\
+'
+inpt='|  1 | bntFewShotv2001         | mlp1              |   72.7255 |  83.2634 |  21.2105  | 11.7528  |\n\
+|  7 | boltFewShotv2001        | mlp1              |   73.6863 |  72.5482 |  16.0285  | 17.6821  |\n\
+| 15 | neurodetourFewShotv2001 | mlp1              |   69.6503 |  71.0383 |  12.5358  | 19.4911  |\n\
+|  2 | bntFewShotv201          | mlp1              |   84.6667 |  81.6976 |  14.3081  | 13.7546  |\n\
+|  8 | boltFewShotv201         | mlp1              |   84.5556 |  79.6977 |  16.6824  |  9.76029 |\n\
+| 16 | neurodetourFewShotv201  | mlp1              |   77.1225 |  78.5981 |  15.3146  |  9.76747 |\n\
+|  3 | bntFewShotv203          | mlp1              |   88.152  |  80.1629 |   9.23886 | 12.6791  |\n\
+|  9 | boltFewShotv203         | mlp1              |   76.1013 |  77.9842 |  18.1828  |  9.81583 |\n\
+| 17 | neurodetourFewShotv203  | mlp1              |   79.8824 |  78.5981 |  18.7472  |  9.76747 |\n\
+|  4 | bntFewShotv205          | mlp1              |   73.9559 |  80.1629 |  15.8416  | 12.6791  |\n\
+| 10 | boltFewShotv205         | mlp1              |   76.9069 |  80.1629 |  24.1032  | 12.6791  |\n\
+| 18 | neurodetourFewShotv205  | mlp1              |   82.4657 |  80.1629 |  12.3109  | 12.6791  |\n\
+|  5 | bntFewShotv210          | mlp1              |   82.7402 |  81.3385 |  14.0509  | 12.5839  |\n\
+| 11 | boltFewShotv210         | mlp1              |   83.4199 |  81.1439 |   8.47972 |  9.75271 |\n\
+| 19 | neurodetourFewShotv210  | mlp1              |   78.9788 |  81.7362 |  14.0069  |  8.90499 |\n\
+'
 def line2latex(line):
     line = line.split('|')
-    acc = line[-3]
-    f1 = line[-2]
-    acc = f"{float(acc.split('+-')[0]):.2f}"+"$_{\\pm"+f"{float(acc.split('+-')[1]):.2f}"+"}$"
-    f1 = f"{float(f1.split('+-')[0]):.2f}"+"$_{\\pm"+f"{float(f1.split('+-')[1]):.2f}"+"}$"
-    print(f'{acc} & {f1}')
+    # acc = line[-3]
+    # f1 = line[-2]
+    # acc = f"{float(acc.split('+-')[0]):.2f}"+"$_{\\pm"+f"{float(acc.split('+-')[1]):.2f}"+"}$"
+    # f1 = f"{float(f1.split('+-')[0]):.2f}"+"$_{\\pm"+f"{float(f1.split('+-')[1]):.2f}"+"}$"
+    acc = f"{float(line[-5]):.2f}"+"$_{\\pm"+f"{float(line[-3]):.2f}"+"}$"
+    f1 = f"{float(line[-4]):.2f}"+"$_{\\pm"+f"{float(line[-2]):.2f}"+"}$"
+    print(f'{line[2]} {f1} & {acc}')
 
 
 lines = inpt.split('\n')[:-1]

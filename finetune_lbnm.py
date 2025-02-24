@@ -1,5 +1,5 @@
 from datasets import dataloader_generator, multidataloader_generator
-from sklearn.metrics import accuracy_score, precision_recall_fscore_support
+from sklearn.metrics import accuracy_score, precision_recall_fscore_support, roc_curve, auc
 from models import brain_net_transformer, neuro_detour, brain_gnn, brain_identity, bolt, graphormer, nagphormer, vanilla_model
 from models.heads import Classifier, BNDecoder
 from torch_geometric.nn import GCNConv, GATConv, SAGEConv, SGConv
@@ -67,6 +67,7 @@ DATA_CLASS_N = {
     'abide': 2,
     'neurocon': 2,
     'taowu': 2,
+    'sz-diana': 2,
 }
 LOSS_FUNCS = {
     'y': nn.CrossEntropyLoss(),
@@ -88,7 +89,7 @@ def main():
     parser.add_argument('--classifier', type=str, default = 'mlp')
     parser.add_argument('--max_patience', type=int, default = 50)
     parser.add_argument('--hiddim', type=int, default = 2048)
-    parser.add_argument('--lr', type=float, default = 0.0001)
+    parser.add_argument('--lr', type=float, default = 0.00001)
     parser.add_argument('--atlas', type=str, default = 'AAL_116')
     # parser.add_argument('--dataname', type=str, default = 'ppmi')
     # parser.add_argument('--testname', type=str, default = 'None')
@@ -109,24 +110,29 @@ def main():
     parser.add_argument('--decoder', action='store_true')
     parser.add_argument('--decoder_layer', type=int, default = 32)
     parser.add_argument('--datanames', nargs='+', default = ['adni','abide','ppmi','taowu','neurocon'], required=False)
-    parser.add_argument('--pretrained_datanames', nargs='+', default = ['ppmi','abide','taowu','neurocon','hcpa','hcpya'], required=False)
+    parser.add_argument('--pretrained_datanames', nargs='+', default = ['ppmi','abide','taowu','neurocon','hcpa', 'adni','hcpya'], required=False)
     parser.add_argument('--load_dname', type=str, default = 'hcpa', required=False)
+    parser.add_argument('--few_shot', type=float, default = 1)
+    parser.add_argument('--force_2class', action='store_true')
+
 
     args = parser.parse_args()
     # args.decoder = True
     print(args)
     # expdate = str(datetime.now())
     # expdate = expdate.replace(':','-').replace(' ', '-').replace('.', '-')
-    load_dname = 'hcpa'
+    load_dname = args.load_dname#'hcpa'
     device = args.device
     hiddim = args.hiddim
     # nclass = DATA_CLASS_N[args.dataname]
-    dataset = {'adni': None,'hcpa': None,'hcpya': None,'abide': None,'ppmi': None,'taowu': None,'neurocon': None}
+    dataset_dict = {dn: None for dn in args.datanames}
+    pretrain_dataset_dict = {dn: None for dn in args.pretrained_datanames}
     # Initialize lists to store evaluation metrics
     accuracies_dict = {}
     f1_scores_dict = {}
     prec_scores_dict = {}
     rec_scores_dict = {}
+    auc_scores_dict = {}
     # taccuracies = []
     # tf1_scores = []
     # tprec_scores = []
@@ -152,19 +158,46 @@ def main():
     mweight_fn = f'model_weights/{save_mn}_{"-".join(args.pretrained_datanames)}_boldwin{args.bold_winsize}_{args.adj_type}{args.node_attr}'
     assert os.path.exists(mweight_fn), mweight_fn
     # os.makedirs(mweight_fn, exist_ok=True)
-    for i in range(args.cv_fold_n):
-        dataloaders = multidataloader_generator(batch_size=args.batch_size, nfold=i, datasets=dataset, dname_list=args.datanames,
+    # for i in range(args.cv_fold_n):
+    _nfold = {
+        'ukb': 5,
+        'hcpa': 5,
+        'hcpya': 5,
+        'adni': 5,
+        'oasis': 5,
+        'ppmi': 10,
+        'abide': 10,
+        'neurocon': 10,
+        'taowu': 10,
+        'sz-diana': 10,
+    }
+    foldi = 0
+    i = 0
+    # for foldi in range(5):
+    while foldi < 5 and i < _nfold[args.datanames[0]]:
+        i += 1
+        dataloaders = multidataloader_generator(batch_size=args.batch_size, nfold=i, datasets=dataset_dict, dname_list=args.datanames, few_shot=args.few_shot,
                                                                  node_attr=args.node_attr, adj_type=args.adj_type, transform=transform, #testset=testset,
                                                                  fc_winsize=args.bold_winsize, atlas_name=args.atlas, fc_th=args.fc_th, sc_th=args.sc_th)
-        train_loader, val_loader, merged_dataset, dataset = dataloaders
+        train_loader, val_loader, merged_dataset, dataset_dict = dataloaders
+        vald_all_pass = True
+        for dname in val_loader:
+            uni_label = torch.cat([data['y'] for data in val_loader[dname]]).unique()
+            if args.force_2class: uni_label = uni_label[uni_label<=2]
+            print('uni_label', uni_label)
+            if len(uni_label) == 1: 
+                vald_all_pass = False
+                break
+        if not vald_all_pass: continue
+        foldi += 1
         model = MODEL_BANK[args.models](node_sz=node_sz, out_channel=hiddim, in_channel=input_dim, batch_size=args.batch_size, device=device, nlayer=args.nlayer, heads=args.nhead).to(device)
         # print(sum([p.numel() for p in model.parameters()]))
         # exit()
 
-        pretrain_dataloaders = multidataloader_generator(batch_size=args.batch_size, nfold=i, datasets=dataset, dname_list=args.pretrained_datanames,
+        pretrain_dataloaders = multidataloader_generator(batch_size=args.batch_size, nfold=i, datasets=pretrain_dataset_dict, dname_list=args.pretrained_datanames,
                                                                  node_attr=args.node_attr, adj_type=args.adj_type, transform=transform, #testset=testset,
                                                                  fc_winsize=args.bold_winsize, atlas_name=args.atlas, fc_th=args.fc_th, sc_th=args.sc_th)
-        pretrain_merged_dataset = pretrain_dataloaders[2]
+        pretrain_merged_dataset, pretrain_dataset_dict = pretrain_dataloaders[2:]
         nclass = sum(pretrain_merged_dataset.nclass_list)
         overlap_dnames = list(np.intersect1d(args.pretrained_datanames, merged_dataset.dnames))
         if 'ppmi' in merged_dataset.dnames and 'ppmi' not in overlap_dnames:
@@ -210,14 +243,14 @@ def main():
         bb_loaded = False
         head_loaded = False
         for fn in os.listdir(mweight_fn):
-            if fn.startswith(f'bb_fold{i}_{load_dname}Best_'):
+            if fn.startswith(f'bb_fold{min(i,4)}_{load_dname}Best_'):
                 model.load_state_dict(torch.load(f'{mweight_fn}/{fn}', map_location='cpu'))
                 bb_loaded = True
-            if fn.startswith(f'head_fold{i}_{load_dname}Best_'):
+            if fn.startswith(f'head_fold{min(i,4)}_{load_dname}Best_'):
                 classifier.load_state_dict(torch.load(f'{mweight_fn}/{fn}', map_location='cpu'), strict=False)
                 head_loaded = True
             if head_loaded and bb_loaded: break
-        assert bb_loaded and head_loaded, f'{mweight_fn}/bb_fold{i}_{load_dname}Best_'
+        assert bb_loaded and head_loaded, f'{mweight_fn}/bb_fold{min(i,4)}_{load_dname}Best_'
         print(datetime.now(), 'Done')
         optimizer = optim.Adam(list(model.parameters()) + list(classifier.parameters()), lr=args.lr, weight_decay=args.decay) 
         # optimizer = optim.SGD(list(model.parameters()) + list(classifier.parameters()), lr=args.lr, weight_decay=args.decay) 
@@ -227,10 +260,11 @@ def main():
         best_acc = {}
         best_prec = {}
         best_rec = {}
+        best_auc = {}
         # patience = {}
         for epoch in (pbar := trange(1, args.epochs+1, desc='Epoch')):
             print(datetime.now(), 'train start')
-            train(model, classifier, device, train_loader, optimizer, epoch)
+            train(model, classifier, device, train_loader, optimizer, epoch, force_2class=args.force_2class)
             print(datetime.now(), 'train done, test start')
             for dname in val_loader:
                 if dname not in best_f1:
@@ -238,28 +272,32 @@ def main():
                     best_acc[dname] = {}
                     best_prec[dname] = {}
                     best_rec[dname] = {}
+                    best_auc[dname] = {}
                 one_val_loader = val_loader[dname]
                 # acc, prec, rec, f1 = eval(model, classifier, device, one_val_loader, dname=dname)
-                scores = eval(model, classifier, device, one_val_loader, dname=dname)
+                scores = eval(model, classifier, device, one_val_loader, dname=dname, force_2class=args.force_2class)
                 print(datetime.now(), 'test done')
                 log = f'Dataset: {dname} [Accuracy, F1 Score]:'
                 for k in scores:
-                    acc, prec, rec, f1 = scores[k]
+                    acc, prec, rec, f1, auc_score = scores[k]
                     if scores[k][0] == -1:
                         f1 = -1*f1
 
-                    log += f'({k}) [{acc:.6f},  {f1:.6f}], \t'
+                    log += f'({k}) [{acc:.6f},  {f1:.6f}], {auc_score:.6f}\t'
                     if k not in best_f1[dname]:
                         best_f1[dname][k] = -torch.inf
                         best_acc[dname][k] = -torch.inf
                         best_prec[dname][k] = -torch.inf
                         best_rec[dname][k] = -torch.inf
+                        best_auc[dname][k] = -torch.inf
                     
-                    if f1 >= best_f1[dname][k]:
+                    # if f1 >= best_f1[dname][k]:
+                    if f1 + auc_score >= best_auc[dname][k] + best_f1[dname][k]:
                         best_f1[dname][k] = f1
                         best_acc[dname][k] = acc
                         best_prec[dname][k] = prec
                         best_rec[dname][k] = rec
+                        best_auc[dname][k] = auc_score
                         # if args.savemodel:
                         #     torch.save(model.state_dict(), f'{mweight_fn}/bb_fold{i}_{dname}Best-{k}_{expdate}.pt')
                         #     torch.save(classifier.state_dict(), f'{mweight_fn}/head_fold{i}_{dname}Best-{k}_{expdate}.pt')
@@ -267,22 +305,25 @@ def main():
                 print(log)
         
         for dname in best_acc:
-            log = f'Dataset: {dname} [Accuracy, F1 Score, Prec, Rec]:'
+            log = f'Dataset: {dname} [Accuracy, F1 Score, Prec, Rec, AUC]:'
             for k in best_acc[dname]:
                 if dname not in accuracies_dict: accuracies_dict[dname] = {k: []}
                 if dname not in f1_scores_dict: f1_scores_dict[dname] = {k: []}
                 if dname not in prec_scores_dict: prec_scores_dict[dname] = {k: []}
                 if dname not in rec_scores_dict: rec_scores_dict[dname] = {k: []}
+                if dname not in auc_scores_dict: auc_scores_dict[dname] = {k: []}
                 if k not in accuracies_dict[dname]:
                     accuracies_dict[dname][k] = []
                     f1_scores_dict[dname][k] = []
                     prec_scores_dict[dname][k] = []
                     rec_scores_dict[dname][k] = []
+                    auc_scores_dict[dname][k] = []
                 accuracies_dict[dname][k].append(best_acc[dname][k])
                 f1_scores_dict[dname][k].append(best_f1[dname][k])
                 prec_scores_dict[dname][k].append(best_prec[dname][k])
                 rec_scores_dict[dname][k].append(best_rec[dname][k])
-                log += f'({k}) [{best_acc[dname][k]}, {best_f1[dname][k]}, {best_prec[dname][k]}, {best_rec[dname][k]}], \t'
+                auc_scores_dict[dname][k].append(best_auc[dname][k])
+                log += f'({k}) [{best_acc[dname][k]}, {best_f1[dname][k]}, {best_prec[dname][k]}, {best_rec[dname][k]}, {best_auc[dname][k]}], \t'
             print(log)
 
     # Calculate mean and standard deviation of evaluation metrics
@@ -292,6 +333,7 @@ def main():
             f1_scores = f1_scores_dict[dname][k]
             prec_scores = prec_scores_dict[dname][k]
             rec_scores = rec_scores_dict[dname][k]
+            auc_scores = auc_scores_dict[dname][k]
             mean_accuracy = sum(accuracies) / len(accuracies)
             std_accuracy = torch.std(torch.tensor(accuracies))
             mean_f1_score = sum(f1_scores) / len(f1_scores)
@@ -300,14 +342,17 @@ def main():
             std_prec_score = torch.std(torch.tensor(prec_scores))
             mean_rec_score = sum(rec_scores) / len(rec_scores)
             std_rec_score = torch.std(torch.tensor(rec_scores))
+            mean_auc_score = sum(auc_scores) / len(auc_scores)
+            std_auc_score = torch.std(torch.tensor(auc_scores))
             print(f'Dataset: {dname} ({k})')
-            print(f'Mean Accuracy: {mean_accuracy}, Std Accuracy: {std_accuracy}')
+            print(f'Mean Accuracy: {mean_auc_score}, Std Accuracy: {std_auc_score}')
             print(f'Mean F1 Score: {mean_f1_score}, Std F1 Score: {std_f1_score}')
             print(f'Mean prec Score: {mean_prec_score}, Std prec Score: {std_prec_score}')
             print(f'Mean rec Score: {mean_rec_score}, Std rec Score: {std_rec_score}')
+            # print(f'Mean auc Score: {mean_auc_score}, Std rec Score: {std_auc_score}')
 
         
-def train(model, classifier, device, loader, optimizer, epoch):
+def train(model, classifier, device, loader, optimizer, epoch, force_2class=False):
     model.train()
     classifier.train()
     losses = []
@@ -329,6 +374,8 @@ def train(model, classifier, device, loader, optimizer, epoch):
             if k == 'y':
                 pre_nclass_i = 0
                 for nclassi, nclass in enumerate(loader.dataset.dataset.nclass_list):
+                    # _nclass = nclass
+                    # if force_2class: _nclass = 3
                     one_gt = batch[k][:, nclassi]
                     one_y = y[k][..., pre_nclass_i:pre_nclass_i+nclass]
                     if len(one_y.shape) == 3:
@@ -343,6 +390,12 @@ def train(model, classifier, device, loader, optimizer, epoch):
                     else:
                         one_y = one_y[one_gt != -1]
                         one_gt = one_gt[one_gt != -1]
+                    if force_2class:
+                        # print(one_y.shape)
+                        one_y = one_y[one_gt <= 2]
+                        one_gt = one_gt[one_gt <= 2]
+                        # print(one_y.shape)
+                        # exit()
                     loss += LOSS_W[k]*LOSS_FUNCS[k](one_y, one_gt)
                     pre_nclass_i += nclass
             else: # sex or age
@@ -371,7 +424,9 @@ def train(model, classifier, device, loader, optimizer, epoch):
         optimizer.step()
         losses.append(loss.detach().cpu().item())
         pre_nclass_i = 0
-        for nclassi, nclass in enumerate(loader.dataset.dataset.nclass_list):            
+        for nclassi, nclass in enumerate(loader.dataset.dataset.nclass_list):   
+            # _nclass = nclass
+            # if force_2class: _nclass = 3
             for k in LOSS_FUNCS:
                 if k != 'y': continue
                 one_gt = batch[k][:, nclassi]
@@ -415,6 +470,9 @@ def train(model, classifier, device, loader, optimizer, epoch):
             assert k == 'y', f'{k},{di},{dname},{len(y_true_dict)}'
             y_true = torch.cat(y_true_dict[di][k], dim = 0).detach().cpu()
             y_scores = torch.cat(y_scores_dict[di][k], dim = 0).detach().cpu()
+            if force_2class:
+                y_scores = y_scores[y_true <= 2]
+                y_true = y_true[y_true <= 2]
             y_true = y_true.numpy()
             y_scores = y_scores.numpy().argmax(1)
             acc = accuracy_score(y_true, y_scores)
@@ -438,7 +496,7 @@ def train(model, classifier, device, loader, optimizer, epoch):
     
     print(', '.join(logs))
 
-def eval(model, classifier, device, loader, dname=None):
+def eval(model, classifier, device, loader, dname=None, force_2class=False):
     model.eval()
     classifier.eval()
     y_true = [[]]
@@ -461,6 +519,8 @@ def eval(model, classifier, device, loader, dname=None):
 
         pre_nclass_i = 0
         for nclassi, nclass in enumerate(loader.dataset.dataset.nclass_list):
+            # _nclass = nclass
+            # if force_2class: _nclass = 3
             for k in LOSS_FUNCS:
                 if k != 'y': continue
                 one_gt = batch[k][:, nclassi]
@@ -501,10 +561,15 @@ def eval(model, classifier, device, loader, dname=None):
     scores = {}
     if 'y' in LOSS_FUNCS:
         y_true = torch.cat(y_true_dict[val_di]['y'], dim = 0).numpy()
-        y_scores = torch.cat(y_scores_dict[val_di]['y'], dim = 0).numpy().argmax(1)
-        acc = accuracy_score(y_true, y_scores)
-        prec, rec, f1, _ = precision_recall_fscore_support(y_true, y_scores, average='weighted')
-        scores['y'] = [acc, prec, rec, f1]
+        y_scores = torch.cat(y_scores_dict[val_di]['y'], dim = 0).softmax(1).numpy()
+        if force_2class:
+            y_scores = y_scores[y_true <= 2]
+            y_true = y_true[y_true <= 2]
+        acc = accuracy_score(y_true, y_scores.argmax(1))
+        prec, rec, f1, _ = precision_recall_fscore_support(y_true, y_scores.argmax(1), average='weighted')
+        fpr, tpr, thresholds = roc_curve(y_true-1, y_scores[:, 2], pos_label=1)
+        auc_score = auc(fpr, tpr)
+        scores['y'] = [acc, prec, rec, f1, auc_score]
     for di in range(len(loader.dataset.dataset.nclass_list), len(y_true_dict)):
         for k in y_true_dict[di]:
             assert k != 'y', k

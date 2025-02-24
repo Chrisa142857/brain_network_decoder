@@ -3,6 +3,7 @@ data/
 figs/
 logs/
 logs2/
+logs3/
 model_weights/
 resources/
 nohup.out

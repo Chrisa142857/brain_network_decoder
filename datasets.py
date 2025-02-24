@@ -27,6 +27,7 @@ DATAROOT = {
     'abide': '/ram/USERS/jiaqi/benchmark_fmri/data/ABIDE',
     'neurocon': '/ram/USERS/bendan/ACMLab_DATA/All_Dataset/neurocon/neurocon',
     'taowu': '/ram/USERS/bendan/ACMLab_DATA/All_Dataset/taowu/taowu',
+    'sz-diana': '/ram/USERS/ziquanw/data/SZ_data_Schezophrannia_Diana_Jefferies',
 }
 DATANAME = {
     'adni': 'ADNI_BOLD_SC',
@@ -53,8 +54,9 @@ DATA_DEFAULT_TYPE = {
     'abide': 'task-REST',
     'neurocon': 'task-REST',
     'taowu': 'task-REST',
+    'sz-diana': 'task-REST',
 }
-DISEASE_DATA = ['adni', 'ppmi', 'abide', 'neurocon', 'taowu']
+DISEASE_DATA = ['adni', 'ppmi', 'abide', 'neurocon', 'taowu', 'sz-diana']
 class NeuroNetworkDataset(Dataset):
 
     def __init__(self, atlas_name='AAL_116',
@@ -537,6 +539,163 @@ class Dataset_PPMI_ABIDE(Dataset):
                 data.y = self.label_remap[data.y]
         return data
 
+
+
+class Dataset_SZ(Dataset):
+    def __init__(self, atlas_name='AAL_116', # multi-atlas not available 
+                 dname='sz-diana',
+                node_attr = 'FC', adj_type = 'FC',
+                transform = None,
+                fc_winsize = 137, # not implement
+                fc_winoverlap = 0, # not implement
+                fc_th = 0.5,
+                sc_th = 0.1, **kargs):
+        super(Dataset_SZ, self).__init__()
+        self.adj_type = adj_type
+        self.transform = transform
+        self.node_attr = node_attr
+        self.atlas_name = atlas_name
+        self.fc_th = fc_th
+        self.sc_th = sc_th
+        self.fc_winsize = fc_winsize
+        self.node_num = 116
+        self.label_remap = None
+        self.root_dir = DATAROOT[dname]
+        self.dname = dname
+        self.data = []
+        self.labels = []
+        self.data_path = []
+        self.subject = []
+        self.label_names = [None for _ in range(4)]
+        
+        default_fc_th = 0.5
+        default_sc_th = 0.1
+        if self.fc_th == default_fc_th and self.sc_th == default_sc_th:
+            data_dir = f'{dname}-{atlas_name}-BOLDwin{fc_winsize}'
+        else:
+            data_dir = f"{dname}-{atlas_name}-BOLDwin{fc_winsize}-FCth{str(self.fc_th).replace('.', '')}SCth{str(self.sc_th).replace('.', '')}"
+        os.makedirs(f'data/{data_dir}', exist_ok=True)
+        for subdir, _, files in os.walk(self.root_dir):
+            if 'Nonconverters2' in subdir: continue
+            for file in files:
+                if file.endswith('.txt'):
+                    file_path = os.path.join(subdir, file)
+                    self.data_path.append(file_path)
+                    label, label_name = self.get_label(subdir)
+                    self.labels.append(label)
+                    self.label_names[label] = label_name
+                    self.subject.append(file)
+        self.label_names = [l for l in self.label_names if l is not None]
+        self.cached_data = [None for _ in range(len(self.data_path))]
+        self.data_subj = np.unique(self.subject)
+        if os.path.exists(f'/ram/USERS/ziquanw/data/meta_data/{dname.upper()}_metadata.csv'):
+            meta_data = pd.read_csv(f'/ram/USERS/ziquanw/data/meta_data/{dname.upper()}_metadata.csv')
+            self.subj2sex = {
+                subj: np.unique(meta_data[meta_data['Subject']==int(re.findall(r"[-+]?\d*\.\d+|\d+", subj)[0])]['Sex']).item()
+            for subj in self.data_subj if int(re.findall(r"[-+]?\d*\.\d+|\d+", subj)[0]) in list(meta_data['Subject'])}
+            self.sex_label = {'M': 0, 'F': 1}
+            self.subj2sex = {k: self.sex_label[v] for k, v in self.subj2sex.items()}
+            self.subj2age = {
+                subj: torch.tensor(np.unique(meta_data[meta_data['Subject']==int(re.findall(r"[-+]?\d*\.\d+|\d+", subj)[0])]['Age']).item()).float().reshape(1, 1)
+            for subj in self.data_subj if int(re.findall(r"[-+]?\d*\.\d+|\d+", subj)[0]) in list(meta_data['Subject'])}
+            # if len(self.subj2age) > 0:
+            #     self.age_max = np.max(list(self.subj2age.values()))
+            #     self.age_min = np.min(list(self.subj2age.values()))
+            #     self.subj2age = {k: (v-self.age_min)/(self.age_max-self.age_min) for k, v in self.subj2age.items()}
+        else:
+            self.subj2sex = {}
+            self.subj2age = {}
+        if self.transform is not None:
+            processed_fn = f'processed_adj{self.adj_type}x{self.node_attr}_FCth{self.fc_th}SCth{self.sc_th}_{type(self.transform).__name__}{self.transform.k}'.replace('.', '')
+            if not os.path.exists(f'data/{data_dir}/{processed_fn}.pt'):
+                for _ in tqdm(self, desc='Processing'):
+                    pass
+                
+                torch.save(self.cached_data, f'data/{data_dir}/{processed_fn}.pt')
+            self.cached_data = torch.load(f'data/{data_dir}/{processed_fn}.pt')
+        
+        for _ in tqdm(self, desc='Preload data'):
+            pass
+        self.nclass_list = [len(self.label_names)]
+        print("Data num", len(self), "Label name", self.label_names)
+            
+    def get_label(self, subdir):
+        if 'Nonconverters2' in subdir:
+            return 0, 'CN'
+        elif 'Unaffected2' in subdir:
+            return 0, 'CN' # -high-risk
+        elif 'Converters2' in subdir:
+            return 1, 'SZ'
+        else:
+            assert False, subdir
+        
+    def __len__(self):
+        return len(self.cached_data)
+    
+    def __getitem__(self, index):
+        # label = self.labels[index]
+        # data = (features - torch.mean(features, axis=0, keepdims=True)) / torch.std(features, axis=0, keepdims=True)
+        if self.cached_data[index] is None:
+            features = np.loadtxt(self.data_path[index]).T # N x T
+            features = torch.from_numpy(features).float()
+            x = torch.nan_to_num(features)
+            fc = torch.corrcoef(x)
+            subjn = self.subject[index]
+            edge_index_fc = torch.stack(torch.where(fc > self.fc_th))
+            # edge_index_sc = None
+            edge_index_sc = edge_index_fc
+            if self.adj_type == 'FC':
+                edge_index = edge_index_fc
+                # adj = torch.sparse_coo_tensor(indices=edge_index_fc, values=fc[edge_index_fc[0], edge_index_fc[1]], size=(self.node_num, self.node_num))
+            else:
+                assert False, "Not implement"
+                # adj = torch.sparse_coo_tensor(indices=edge_index_sc, values=sc[edge_index_sc[0], edge_index_sc[1]], size=(self.node_num, self.node_num))
+            if self.node_attr=='FC':
+                x = fc
+            elif self.node_attr=='BOLD':
+                x = x[:, :self.fc_winsize]
+                if x.shape[1] < self.fc_winsize: 
+                    x = torch.cat([x, torch.zeros(x.shape[0], self.fc_winsize-x.shape[1])], 1)
+                    
+            elif self.node_attr=='SC':
+                assert False, "Not implement"
+            elif self.node_attr=='ID':
+                x = torch.arange(self.node_num).float()[:, None]
+        
+            x[x.isnan()] = 0
+            x[x.isinf()] = 0
+            data = {
+                'edge_index': edge_index,
+                'x': x,
+                'y': self.labels[index],
+                'sex': self.subj2sex[subjn] if subjn in self.subj2sex else -1,
+                'age': self.subj2age[subjn] if subjn in self.subj2age else torch.tensor([[-1]]).float(),
+                'edge_index_fc': edge_index_fc,
+                'edge_index_sc': edge_index_sc
+            }
+            if self.transform is not None:
+                new_data = self.transform(Data.from_dict(data))
+                # self.cached_data[index] = new_data
+                for key in new_data:
+                    data[key] = new_data[key]
+                    
+            adj_fc = torch.zeros(x.shape[0], x.shape[0]).bool()
+            adj_fc[edge_index_fc[0], edge_index_fc[1]] = True
+            adj_sc = torch.zeros(x.shape[0], x.shape[0]).bool()
+            adj_sc[edge_index_sc[0], edge_index_sc[1]] = True
+            adj_fc[torch.arange(self.node_num), torch.arange(self.node_num)] = True
+            adj_sc[torch.arange(self.node_num), torch.arange(self.node_num)] = True
+            data['adj_fc'] = adj_fc[None]
+            data['adj_sc'] = adj_sc[None]
+            
+            self.cached_data[index] = Data.from_dict(data)
+        data = self.cached_data[index]
+        if self.label_remap is not None:
+            if data.y in self.label_remap:
+                data.y = self.label_remap[data.y]
+        return data
+
+
 DATASET_CLASS = {
     'adni': NeuroNetworkDataset,
     'oasis': NeuroNetworkDataset,
@@ -546,11 +705,12 @@ DATASET_CLASS = {
     'ppmi': Dataset_PPMI_ABIDE,
     'abide': Dataset_PPMI_ABIDE,
     'neurocon': Dataset_PPMI_ABIDE,
-    'taowu': Dataset_PPMI_ABIDE
+    'taowu': Dataset_PPMI_ABIDE,
+    'sz-diana': Dataset_SZ,
 }
-
-def dataloader_generator(batch_size=4, num_workers=8, nfold=0, total_fold=5, dataset=None, testset='None', **kargs):
-    kf = KFold(n_splits=total_fold, shuffle=True, random_state=142857)
+np.random.seed(142857)
+def dataloader_generator(batch_size=4, num_workers=8, nfold=0, total_fold={'adni': 5,'hcpa': 5,'hcpya': 5,'abide': 10,'ppmi': 10,'taowu': 10,'neurocon': 10, 'sz-diana': 10}, few_shot=1, dataset=None, testset='None', **kargs):
+    kf = KFold(n_splits=total_fold[kargs['dname']], shuffle=True, random_state=142857)
     if dataset is None:
         dataset = DATASET_CLASS[kargs['dname']](**kargs)
     if isinstance(testset, str):
@@ -563,7 +723,16 @@ def dataloader_generator(batch_size=4, num_workers=8, nfold=0, total_fold=5, dat
             atlas_name = {'adni': 'AAL_116', 'oasis': 'D_160', 'ukb': 'Gordon_333', 'hcpa': 'Gordon_333'}
             testset = DATASET_CLASS[kargs['dname']](dname=testset, atlas_name=atlas_name[testset], **kargs)
     all_subjects = dataset.data_subj
+    labels = np.array([data['y'] for data in dataset.cached_data])
     train_index, index = list(kf.split(all_subjects))[nfold]
+    ## Few shot
+    train_shots = [train_index[labels[train_index]==yi] for yi in np.unique(labels)]
+    train_index = []
+    for i in range(len(train_shots)):
+        np.random.shuffle(train_shots[i])
+        train_num = max(int(len(train_shots[i])*few_shot/len(train_shots)), 1) # at least one data
+        train_index.extend(list(train_shots[i][:train_num]))
+    ## Few shot done
     train_subjects = [all_subjects[i] for i in train_index]
     subjects = [all_subjects[i] for i in index]
     # Filter dataset based on training and validation subjects
@@ -655,10 +824,11 @@ def merge_datasets(datasets, dnames):
 def multidataloader_generator(
     # val_dname='adni',
     dname_list=['adni','hcpa','hcpya','abide','ppmi','taowu','neurocon'], 
-    datasets={'adni': None,'hcpa': None,'hcpya': None,'abide': None,'ppmi': None,'taowu': None,'neurocon': None}, 
-    total_fold={'adni': 5,'hcpa': 5,'hcpya': 5,'abide': 10,'ppmi': 10,'taowu': 10,'neurocon': 10},
-    batch_size=4, num_workers=8, nfold=0, **kargs
+    datasets={'adni': None,'hcpa': None,'hcpya': None,'abide': None,'ppmi': None,'taowu': None,'neurocon': None, 'sz-diana': None}, 
+    total_fold={'adni': 5,'hcpa': 5,'hcpya': 5,'abide': 10,'ppmi': 10,'taowu': 10,'neurocon': 10, 'sz-diana': 10},
+    batch_size=4, num_workers=8, nfold=0, few_shot=1, **kargs
 ):
+    np.random.seed(142857)
     # assert val_dname in dname_list 
     train_index_list = []
     valid_index_list = []
@@ -673,6 +843,15 @@ def multidataloader_generator(
         datasets[dname] = dataset
         all_subjects = dataset.data_subj
         train_index, index = list(kf.split(all_subjects))[min(nfold, total_fold[dname]-1)]
+        ## Few shot
+        labels = np.array([data['y'] for data in dataset.cached_data])
+        train_shots = [train_index[labels[train_index]==yi] for yi in np.unique(labels)]
+        train_index = []
+        for i in range(len(train_shots)):
+            np.random.shuffle(train_shots[i])
+            train_num = max(int(len(train_shots[i])*few_shot/2), 1) # at least one data
+            train_index.extend(list(train_shots[i][:train_num]))
+        ## Few shot done
         train_subjects = [all_subjects[i] for i in train_index]
         subjects = [all_subjects[i] for i in index]
         train_data = [di + pre_data_n for di, subj in enumerate(dataset.subject) if subj in train_subjects]
