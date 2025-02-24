@@ -1,6 +1,6 @@
-## Codes for the large connectome model (LCM).
+## Codes for Brain-Environment Cross-Attention (BECA).
 
-The official implementation of paper "Large Connectome Model: An fMRI Foundation Model of Brain Connectomes Powered by Brain-Environment Interactions".
+The official implementation of paper "Brain-Environment Cross-Attention (BECA) Meta-Matching: A New Perspective of Brain Connectome Zero-shot Learning".
 
 ### File structure
 
