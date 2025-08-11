@@ -22,7 +22,7 @@ DATAROOT = {
     'oasis': '/ram/USERS/ziquanw/detour_hcp/data',
     'hcpa': '/ram/USERS/bendan/ACMLab_DATA',
     'ukb': '/ram/USERS/ziquanw/data',
-    'hcpya': '/ram/USERS/ziquanw/data',
+    'hcpya': '/ram/USERS/bendan/ACMLab_DATA',
     'ppmi': '/ram/USERS/jiaqi/benchmark_fmri/data/PPMI',
     'abide': '/ram/USERS/jiaqi/benchmark_fmri/data/ABIDE',
     'neurocon': '/ram/USERS/bendan/ACMLab_DATA/All_Dataset/neurocon/neurocon',
@@ -726,12 +726,13 @@ def dataloader_generator(batch_size=4, num_workers=8, nfold=0, total_fold={'adni
     labels = np.array([data['y'] for data in dataset.cached_data])
     train_index, index = list(kf.split(all_subjects))[nfold]
     ## Few shot
-    train_shots = [train_index[labels[train_index]==yi] for yi in np.unique(labels)]
-    train_index = []
-    for i in range(len(train_shots)):
-        np.random.shuffle(train_shots[i])
-        train_num = max(int(len(train_shots[i])*few_shot/len(train_shots)), 1) # at least one data
-        train_index.extend(list(train_shots[i][:train_num]))
+    if few_shot < 1:
+        train_shots = [train_index[labels[train_index]==yi] for yi in np.unique(labels)]
+        train_index = []
+        for i in range(len(train_shots)):
+            np.random.shuffle(train_shots[i])
+            train_num = max(int(len(train_shots[i])*few_shot/len(train_shots)), 1) # at least one data
+            train_index.extend(list(train_shots[i][:train_num]))
     ## Few shot done
     train_subjects = [all_subjects[i] for i in train_index]
     subjects = [all_subjects[i] for i in index]

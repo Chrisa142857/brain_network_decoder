@@ -45,58 +45,116 @@ Dataset: hcpa [Accuracy, F1 Score, Prec, Rec]:(y) [0.9676746611053181, 0.9697819
 Dataset: hcpya [Accuracy, F1 Score, Prec, Rec]:(y) [0.9273570324574961, 0.9359947671499083, 0.9453133247843925, 0.9273570324574961], 	(sex) [0.7171561051004637, 0.7139809641236372, 0.721477088568502, 0.7171561051004637], 	(age) [-1, -10.766571998596191, -1, -1], 	\n\
 '
 
+# ## logs/none_7datasets_decoder328_attrFC_v3.log
+# Fold1='Dataset: adni, (y) Accuracy: 0.9259259259259259, F1 Score: 0.9259259259259259, Prec: 0.9259259259259259, Rec: 0.9259259259259259, 	\n\
+# Dataset: ppmi, (y) Accuracy: 0.5238095238095238, F1 Score: 0.5396825396825398, Prec: 0.6309523809523809, Rec: 0.5238095238095238, 	\n\
+# Dataset: abide, (y) Accuracy: 0.7184466019417476, F1 Score: 0.7181786854910308, Prec: 0.71804669969563, Rec: 0.7184466019417476, 	\n\
+# Dataset: taowu, (y) Accuracy: 1.0, F1 Score: 1.0, Prec: 1.0, Rec: 1.0, 	\n\
+# Dataset: neurocon, (y) Accuracy: 0.6, F1 Score: 0.7333333333333333, Prec: 1.0, Rec: 0.6, 	\n\
+# Dataset: hcpa, (y) Accuracy: 0.943762781186094, F1 Score: 0.951399637262435, Prec: 0.9598240966964372, Rec: 0.943762781186094, 	\n\
+# Dataset: hcpya, (y) Accuracy: 0.9001584786053882, F1 Score: 0.917672592747767, Prec: 0.9379898615961144, Rec: 0.9001584786053882, 	\n\
+# '
+# Fold2='Dataset: adni, (y) Accuracy: 0.9259259259259259, F1 Score: 0.9407407407407407, Prec: 0.9629629629629629, Rec: 0.9259259259259259, 	\n\
+# Dataset: ppmi, (y) Accuracy: 0.5714285714285714, F1 Score: 0.6727891156462584, Prec: 0.835978835978836, Rec: 0.5714285714285714, 	\n\
+# Dataset: abide, (y) Accuracy: 0.7281553398058253, F1 Score: 0.7281553398058253, Prec: 0.7281553398058253, Rec: 0.7281553398058253, 	\n\
+# Dataset: taowu, (y) Accuracy: 1.0, F1 Score: 1.0, Prec: 1.0, Rec: 1.0, 	\n\
+# Dataset: neurocon, (y) Accuracy: 1.0, F1 Score: 1.0, Prec: 1.0, Rec: 1.0, 	\n\
+# Dataset: hcpa, (y) Accuracy: 0.960204081632653, F1 Score: 0.961905930479412, Prec: 0.9639823261679845, Rec: 0.960204081632653, 	\n\
+# Dataset: hcpya, (y) Accuracy: 0.9185185185185185, F1 Score: 0.9296151883184531, Prec: 0.9431278113848618, Rec: 0.9185185185185185, 	\n\
+# '
+# Fold3='Dataset: adni, (y) Accuracy: 0.8148148148148148, F1 Score: 0.7901234567901234, Prec: 0.7962962962962963, Rec: 0.8148148148148148, 	\n\
+# Dataset: ppmi, (y) Accuracy: 0.7142857142857143, F1 Score: 0.7213517665130569, Prec: 0.8154761904761905, Rec: 0.7142857142857143, 	\n\
+# Dataset: abide, (y) Accuracy: 0.6990291262135923, F1 Score: 0.727084634014664, Prec: 0.7578472386665613, Rec: 0.6990291262135923, 	\n\
+# Dataset: taowu, (y) Accuracy: 1.0, F1 Score: 1.0, Prec: 1.0, Rec: 1.0, 	\n\
+# Dataset: neurocon, (y) Accuracy: 1.0, F1 Score: 1.0, Prec: 1.0, Rec: 1.0, 	\n\
+# Dataset: hcpa, (y) Accuracy: 0.9517948717948718, F1 Score: 0.9544333980921342, Prec: 0.9578045810943064, Rec: 0.9517948717948718, 	\n\
+# Dataset: hcpya, (y) Accuracy: 0.9126637554585153, F1 Score: 0.92336156714497, Prec: 0.935848614804447, Rec: 0.9126637554585153, 	\n\
+# '
+# Fold4='Dataset: adni, (y) Accuracy: 0.8333333333333334, F1 Score: 0.8039579468150896, Prec: 0.8641975308641975, Rec: 0.8333333333333334, 	\n\
+# Dataset: ppmi, (y) Accuracy: 0.47619047619047616, F1 Score: 0.4235334713595583, Prec: 0.8125, Rec: 0.47619047619047616, 	\n\
+# Dataset: abide, (y) Accuracy: 0.7475728155339806, F1 Score: 0.752331343944647, Prec: 0.7600106171796434, Rec: 0.7475728155339806, 	\n\
+# Dataset: taowu, (y) Accuracy: 0.75, F1 Score: 0.8500000000000001, Prec: 1.0, Rec: 0.75, 	\n\
+# Dataset: neurocon, (y) Accuracy: 1.0, F1 Score: 1.0, Prec: 1.0, Rec: 1.0, 	\n\
+# Dataset: hcpa, (y) Accuracy: 0.9546858908341915, F1 Score: 0.9603954709639491, Prec: 0.9663984625556293, Rec: 0.9546858908341915, 	\n\
+# Dataset: hcpya, (y) Accuracy: 0.900459418070444, F1 Score: 0.9220583059913531, Prec: 0.946992449781566, Rec: 0.900459418070444, 	\n\
+# '
+# Fold5='Dataset: adni, (y) Accuracy: 0.8148148148148148, F1 Score: 0.8056897477187333, Prec: 0.8981481481481481, Rec: 0.8148148148148148, 	\n\
+# Dataset: ppmi, (y) Accuracy: 0.8095238095238095, F1 Score: 0.8356374807987711, Prec: 0.9107142857142857, Rec: 0.8095238095238095, 	\n\
+# Dataset: abide, (y) Accuracy: 0.6796116504854369, F1 Score: 0.6994582953440975, Prec: 0.7300016596133101, Rec: 0.6796116504854369, 	\n\
+# Dataset: taowu, (y) Accuracy: 1.0, F1 Score: 1.0, Prec: 1.0, Rec: 1.0, 	\n\
+# Dataset: neurocon, (y) Accuracy: 0.75, F1 Score: 0.8500000000000001, Prec: 1.0, Rec: 0.75, 	\n\
+# Dataset: hcpa, (y) Accuracy: 0.9478623566214807, F1 Score: 0.954355287137735, Prec: 0.9623405960699323, Rec: 0.9478623566214807, 	\n\
+# Dataset: hcpya, (y) Accuracy: 0.8825347758887172, F1 Score: 0.8979199200614633, Prec: 0.9201956597122305, Rec: 0.8825347758887172, 	\n\
+# '
+
+# dns = ['adni', 'ppmi', 'abide', 'taowu', 'neurocon', 'hcpa', 'hcpya']
 import numpy as np
 
-# def y_score(fold):
-#     fold = fold.split('\n')[:-1]
-#     dns = []
-#     scores = []
-#     for line in fold:
-#         dn = line.split(' [Accuracy, F1 Score, Prec, Rec]')[0][9:]
-#         score = line.split('(y) ')[1].split(', 	')[0]
-#         dns.append(dn)
-#         scores.append(float(score[1:-1].split(', ')[1])*100)
-#     print(dns)
-#     # return np.mean(scores), np.std(scores)
-#     return scores
+def y_score(fold):
+    fold = fold.split('\n')[:-1]
+    dns = []
+    scores = []
+    for line in fold:
+        dn = line.split(' [Accuracy, F1 Score, Prec, Rec]')[0][9:].split(',')[0]
+        dns.append(dn)
+        score = line.split('(y) ')[1].split(', 	')[0]
+        # print(dn, score)
+        scores.append(float(score.split(', ')[1].replace('F1 Score: ', ''))*100)
+    print(dns)
+    # return np.mean(scores), np.std(scores)
+    return scores, dns
 
-# def sex_score(fold):
-#     fold = fold.split('\n')[:-1]
-#     dns = []
-#     scores = []
-#     for line in fold:
-#         dn = line.split(' [Accuracy, F1 Score, Prec, Rec]')[0][9:]
-#         score = line.split('(sex) ')[1].split(', 	')[0]
-#         dns.append(dn)
-#         scores.append(float(score[1:-1].split(', ')[1])*100)
-#     return scores
+def sex_score(fold):
+    fold = fold.split('\n')[:-1]
+    dns = []
+    scores = []
+    for line in fold:
+        dn = line.split(' [Accuracy, F1 Score, Prec, Rec]')[0][9:]
+        score = line.split('(sex) ')[1].split(', 	')[0]
+        dns.append(dn)
+        scores.append(float(score[1:-1].split(', ')[1])*100)
+    return scores, dns
 
 
-# def age_mse(fold):
-#     fold = fold.split('\n')[:-1]
-#     dns = []
-#     scores = []
-#     for line in fold:
-#         dn = line.split(' [Accuracy, F1 Score, Prec, Rec]')[0][9:]
-#         score = line.split('(age) ')[1].split(', 	')[0]
-#         dns.append(dn)
-#         scores.append(np.sqrt(-1*float(score[1:-1].split(', ')[1])))
-#     return scores
-# avg = []
-# std = []
-# for scores in zip(y_score(Fold1), y_score(Fold2), y_score(Fold3), y_score(Fold4), y_score(Fold5)):
-#     avg.append(np.mean(scores))
-#     std.append(np.std(scores))
-#     print(np.mean(scores), np.std(scores))
+def age_mse(fold):
+    fold = fold.split('\n')[:-1]
+    dns = []
+    scores = []
+    for line in fold:
+        dn = line.split(' [Accuracy, F1 Score, Prec, Rec]')[0][9:]
+        score = line.split('(age) ')[1].split(', 	')[0]
+        dns.append(dn)
+        scores.append(np.sqrt(-1*float(score[1:-1].split(', ')[1])))
+    return scores
+dns = y_score(Fold1)[1]
+avg = []
+std = []
+i = 0
+for scores in zip(y_score(Fold1)[0], y_score(Fold2)[0], y_score(Fold3)[0], y_score(Fold4)[0], y_score(Fold5)[0]):
+    print(dns[i], list(scores))
+    avg.append(np.mean(scores))
+    std.append(np.std(scores))
+    print(np.mean(scores), np.std(scores))
+    i += 1
+exit()
+# print(f'y: {np.mean(avg):.2f}'+'$_{\pm'+f'{np.mean(std):.2f}'+'}$')
+print('sex')
+scores = sex_score(Fold1)[0] + sex_score(Fold2)[0] + sex_score(Fold3)[0] + sex_score(Fold4)[0] + sex_score(Fold5)[0]
+dns = sex_score(Fold1)[1]
+for i in range(len(dns)):
+    onedn=[sex_score(Fold1)[0][i], sex_score(Fold2)[0][i], sex_score(Fold3)[0][i], sex_score(Fold4)[0][i], sex_score(Fold5)[0][i]]
+    print(dns[i], f'{np.mean(onedn):.2f}'+'$_{\pm'+f'{np.std(onedn):.2f}'+'}$')
 
-# print(f'{np.mean(avg):.2f}'+'$_{\pm'+f'{np.mean(std):.2f}'+'}$')
-# scores = sex_score(Fold1) + sex_score(Fold2) + sex_score(Fold3) + sex_score(Fold4) + sex_score(Fold5)
-# # print(scores)
-# print(f'{np.mean(scores):.2f}'+'$_{\pm'+f'{np.std(scores):.2f}'+'}$')
-# scores = age_mse(Fold1) + age_mse(Fold2) + age_mse(Fold3) + age_mse(Fold4) + age_mse(Fold5)
-# # print(scores)
-# print(f'{np.mean(scores):.2f}'+'$_{\pm'+f'{np.std(scores):.2f}'+'}$')
+# print(f'sex: {np.mean(scores):.2f}'+'$_{\pm'+f'{np.std(scores):.2f}'+'}$')
+print('age')
+scores = age_mse(Fold1) + age_mse(Fold2) + age_mse(Fold3) + age_mse(Fold4) + age_mse(Fold5)
+for i in range(len(dns)):
+    onedn=[age_mse(Fold1)[i], age_mse(Fold2)[i], age_mse(Fold3)[i], age_mse(Fold4)[i], age_mse(Fold5)[i]]
+    print(dns[i], f'{np.mean(onedn):.2f}'+'$_{\pm'+f'{np.std(onedn):.2f}'+'}$')
 
+# print(scores)
+# print(f'age: {np.mean(scores):.2f}'+'$_{\pm'+f'{np.std(scores):.2f}'+'}$')
+exit()
 
 
 # def f(s):

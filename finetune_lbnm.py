@@ -7,7 +7,7 @@ from tqdm import trange, tqdm
 import torch.optim as optim
 import torch.nn as nn
 import torch, math
-import argparse, os
+import argparse, os, json
 import numpy as np
 from datetime import datetime
 
@@ -171,11 +171,11 @@ def main():
         'taowu': 10,
         'sz-diana': 10,
     }
-    foldi = 0
+    # foldi = 0
     i = 0
     # for foldi in range(5):
-    while foldi < 5 and i < _nfold[args.datanames[0]]:
-        i += 1
+    # while foldi < 5 and i < _nfold[args.datanames[0]]:
+    while i < _nfold[args.datanames[0]]:
         dataloaders = multidataloader_generator(batch_size=args.batch_size, nfold=i, datasets=dataset_dict, dname_list=args.datanames, few_shot=args.few_shot,
                                                                  node_attr=args.node_attr, adj_type=args.adj_type, transform=transform, #testset=testset,
                                                                  fc_winsize=args.bold_winsize, atlas_name=args.atlas, fc_th=args.fc_th, sc_th=args.sc_th)
@@ -189,24 +189,38 @@ def main():
                 vald_all_pass = False
                 break
         if not vald_all_pass: continue
-        foldi += 1
+        # foldi += 1
         model = MODEL_BANK[args.models](node_sz=node_sz, out_channel=hiddim, in_channel=input_dim, batch_size=args.batch_size, device=device, nlayer=args.nlayer, heads=args.nhead).to(device)
         # print(sum([p.numel() for p in model.parameters()]))
         # exit()
+        meta_info_fn = 'model_weights/' + '-'.join(args.pretrained_datanames) + '_meta.json'
+        if not os.path.exists(meta_info_fn):
+            pretrain_dataloaders = multidataloader_generator(batch_size=args.batch_size, nfold=i, datasets=pretrain_dataset_dict, dname_list=args.pretrained_datanames,
+                                                                    node_attr=args.node_attr, adj_type=args.adj_type, transform=transform, #testset=testset,
+                                                                    fc_winsize=args.bold_winsize, atlas_name=args.atlas, fc_th=args.fc_th, sc_th=args.sc_th)
+            pretrain_merged_dataset, pretrain_dataset_dict = pretrain_dataloaders[2:]
+            pretrain_nclass_list = pretrain_merged_dataset.nclass_list
+            pretrain_dname2tokenid = pretrain_merged_dataset.dname2tokenid
+            with open(meta_info_fn, 'w') as file:
+                json.dump({'nclass_list': pretrain_nclass_list, 'dname2tokenid': pretrain_dname2tokenid}, file)
+        else:
+            with open(meta_info_fn, 'r') as file:
+                meta_data = json.load(file)
+            pretrain_nclass_list = meta_data['nclass_list']
+            pretrain_dname2tokenid = meta_data['dname2tokenid']
 
-        pretrain_dataloaders = multidataloader_generator(batch_size=args.batch_size, nfold=i, datasets=pretrain_dataset_dict, dname_list=args.pretrained_datanames,
-                                                                 node_attr=args.node_attr, adj_type=args.adj_type, transform=transform, #testset=testset,
-                                                                 fc_winsize=args.bold_winsize, atlas_name=args.atlas, fc_th=args.fc_th, sc_th=args.sc_th)
-        pretrain_merged_dataset, pretrain_dataset_dict = pretrain_dataloaders[2:]
-        nclass = sum(pretrain_merged_dataset.nclass_list)
+
+        nclass = sum(pretrain_nclass_list)
+
         overlap_dnames = list(np.intersect1d(args.pretrained_datanames, merged_dataset.dnames))
         if 'ppmi' in merged_dataset.dnames and 'ppmi' not in overlap_dnames:
             if 'taowu' in overlap_dnames: del overlap_dnames[overlap_dnames.index('taowu')]
             if 'neurocon' in overlap_dnames: del overlap_dnames[overlap_dnames.index('neurocon')]
             
-        overlap_dtid = list(set(pretrain_merged_dataset.dname2tokenid[d] for d in overlap_dnames))
-        overlap_dtoken = sum([pretrain_merged_dataset.nclass_list[tid] for tid in overlap_dtid])
-        assert sum(merged_dataset.nclass_list) - overlap_dtoken >= 0, f'{sum(merged_dataset.nclass_list)} - {overlap_dtoken}'
+        overlap_dtid = list(set(pretrain_dname2tokenid[d] for d in overlap_dnames))
+        overlap_dtoken = sum([pretrain_nclass_list[tid] for tid in overlap_dtid])
+        # assert sum(merged_dataset.nclass_list) - overlap_dtoken >= 0, f'{sum(merged_dataset.nclass_list)} - {overlap_dtoken}'
+        new_token_num = max(sum(merged_dataset.nclass_list) - overlap_dtoken, 0)
         tokenid2dname = {}
         for d in merged_dataset.dname2tokenid:
             tid = merged_dataset.dname2tokenid[d]
@@ -220,8 +234,8 @@ def main():
             overlap_d = False
             for d in tokenid2dname[tid]:
                 if d in overlap_dnames:
-                    start_ti = sum([pretrain_merged_dataset.nclass_list[nclass_i] for nclass_i in range(pretrain_merged_dataset.dname2tokenid[d])])
-                    end_ti = pretrain_merged_dataset.nclass_list[pretrain_merged_dataset.dname2tokenid[d]] + start_ti
+                    start_ti = sum([pretrain_nclass_list[nclass_i] for nclass_i in range(pretrain_dname2tokenid[d])])
+                    end_ti = pretrain_nclass_list[pretrain_dname2tokenid[d]] + start_ti
                     f_tid = list(range(start_ti, end_ti))
                     overlap_d = True
                     break
@@ -238,7 +252,7 @@ def main():
         if not args.decoder:
             classifier = Classifier(CLASSIFIER_BANK[args.classifier], hiddim, nlayer=args.decoder_layer, nclass=nclass, node_sz=node_sz if args.models!='braingnn' else braingnn_nodesz(node_sz, model.ratio), aggr=args.classifier_aggr).to(device)
         else:
-            classifier = BNDecoder(hiddim, nclass=nclass, node_sz=node_sz if args.models!='braingnn' else braingnn_nodesz(node_sz, model.ratio), nlayer=args.decoder_layer, head_num=8, finetune=True, finetune_nclass=sum(merged_dataset.nclass_list) - overlap_dtoken, finetune_tokenid=finetune_tokenid).to(device)
+            classifier = BNDecoder(hiddim, nclass=nclass, node_sz=node_sz if args.models!='braingnn' else braingnn_nodesz(node_sz, model.ratio), nlayer=args.decoder_layer, head_num=8, finetune=True, finetune_nclass=new_token_num, finetune_tokenid=finetune_tokenid).to(device)
         print(datetime.now(), 'Load pre-trained model')        
         bb_loaded = False
         head_loaded = False
@@ -326,6 +340,7 @@ def main():
                 log += f'({k}) [{best_acc[dname][k]}, {best_f1[dname][k]}, {best_prec[dname][k]}, {best_rec[dname][k]}, {best_auc[dname][k]}], \t'
             print(log)
 
+        i += 1
     # Calculate mean and standard deviation of evaluation metrics
     for dname in accuracies_dict:
         for k in accuracies_dict[dname]:
@@ -358,6 +373,7 @@ def train(model, classifier, device, loader, optimizer, epoch, force_2class=Fals
     losses = []
     y_true_dict = [{} for i in range(len(loader.dataset.dataset.nclass_list)+len(LOSS_FUNCS)-1)]
     y_scores_dict = [{} for i in range(len(loader.dataset.dataset.nclass_list)+len(LOSS_FUNCS)-1)]
+    layeri_selected = [{} for i in range(len(loader.dataset.dataset.nclass_list)+len(LOSS_FUNCS)-1)]
     # loss_fn = nn.CrossEntropyLoss()
     # for step, batch in enumerate(tqdm(loader, desc="Iteration")):
     for step, batch in enumerate(loader):
@@ -374,6 +390,8 @@ def train(model, classifier, device, loader, optimizer, epoch, force_2class=Fals
             if k == 'y':
                 pre_nclass_i = 0
                 for nclassi, nclass in enumerate(loader.dataset.dataset.nclass_list):
+                    if k not in layeri_selected[nclassi]: 
+                        layeri_selected[nclassi][k] = []
                     # _nclass = nclass
                     # if force_2class: _nclass = 3
                     one_gt = batch[k][:, nclassi]
@@ -385,6 +403,7 @@ def train(model, classifier, device, loader, optimizer, epoch, force_2class=Fals
                             one_yi = torch.arange(one_y.shape[1])
                             layeri = one_y[:, one_yi, one_gt].argmax(0)
                             one_y = one_y[layeri, one_yi]
+                            layeri_selected[nclassi][k].append(layeri.detach().cpu())
                         else:
                             one_y = one_y.mean(0)
                     else:
@@ -469,7 +488,9 @@ def train(model, classifier, device, loader, optimizer, epoch, force_2class=Fals
         for k in y_true_dict[di]:
             assert k == 'y', f'{k},{di},{dname},{len(y_true_dict)}'
             y_true = torch.cat(y_true_dict[di][k], dim = 0).detach().cpu()
-            y_scores = torch.cat(y_scores_dict[di][k], dim = 0).detach().cpu()
+            y_scores = torch.cat(y_scores_dict[di][k], dim = 0).detach().cpu() 
+            layeri = torch.cat(layeri_selected[di][k], dim = 0).detach().cpu().numpy() if len(layeri_selected[di][k]) > 0 else []
+            np.save(f'{dname}_lcm_layeri.npy', {'layeri_selected': layeri, 'gt': y_true, 'pred': y_scores.argmax(1)}, allow_pickle=True)
             if force_2class:
                 y_scores = y_scores[y_true <= 2]
                 y_true = y_true[y_true <= 2]
@@ -503,7 +524,7 @@ def eval(model, classifier, device, loader, dname=None, force_2class=False):
     y_scores = [[]]
     y_true_dict = [{} for i in range(len(loader.dataset.dataset.nclass_list)+len(LOSS_FUNCS)-1)]
     y_scores_dict = [{} for i in range(len(loader.dataset.dataset.nclass_list)+len(LOSS_FUNCS)-1)]
-
+    layeri_selected = [{} for i in range(len(loader.dataset.dataset.nclass_list)+len(LOSS_FUNCS)-1)]
     # for step, batch in enumerate(tqdm(loader, desc="Iteration")):
 
     for step, batch in enumerate(loader):
@@ -526,15 +547,21 @@ def eval(model, classifier, device, loader, dname=None, force_2class=False):
                 one_gt = batch[k][:, nclassi]
                 one_y = y[k][..., pre_nclass_i:pre_nclass_i+nclass]
                 if len(one_y.shape) == 3:
+                    layeri = one_y[:, one_gt != -1].argmax(0) # Nlayer x Nbatch x Ntoken
                     one_y = one_y[:, one_gt != -1].max(0)[0]
+                    layeri = layeri[torch.arange(len(one_y)).to(one_y.device), one_y.argmax(1)]
                 else:
                     one_y = one_y[one_gt != -1]
+                    layeri = torch.zeros(len(one_y)).to(one_y.device)
+
                 one_gt = one_gt[one_gt != -1]
                 if k not in y_true_dict[nclassi]:
                     y_true_dict[nclassi][k] = []
                     y_scores_dict[nclassi][k] = []
+                    layeri_selected[nclassi][k] = []
                 y_true_dict[nclassi][k].append(one_gt.detach().cpu())
                 y_scores_dict[nclassi][k].append(one_y.detach().cpu())
+                layeri_selected[nclassi][k].append(layeri.detach().cpu())
             pre_nclass_i += nclass
         
         nclassi = len(loader.dataset.dataset.nclass_list)
@@ -562,6 +589,8 @@ def eval(model, classifier, device, loader, dname=None, force_2class=False):
     if 'y' in LOSS_FUNCS:
         y_true = torch.cat(y_true_dict[val_di]['y'], dim = 0).numpy()
         y_scores = torch.cat(y_scores_dict[val_di]['y'], dim = 0).softmax(1).numpy()
+        layeri = torch.cat(layeri_selected[val_di]['y'], dim = 0).numpy()
+        # np.save(f'{dname}_lcm_layeri.npy', {'layeri_selected': layeri, 'gt': y_true, 'pred': y_scores.argmax(1)}, allow_pickle=True)
         if force_2class:
             y_scores = y_scores[y_true <= 2]
             y_true = y_true[y_true <= 2]

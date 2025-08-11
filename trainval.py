@@ -71,8 +71,8 @@ DATA_CLASS_N = {
 }
 LOSS_FUNCS = {
     'y': nn.CrossEntropyLoss(),
-    # 'sex': nn.CrossEntropyLoss(),
-    # 'age': nn.MSELoss(), 
+    'sex': nn.CrossEntropyLoss(),
+    'age': nn.MSELoss(), 
 }
 LOSS_W = {
     'y': 1,
@@ -82,10 +82,10 @@ LOSS_W = {
 
 def main():
     parser = argparse.ArgumentParser(description='NeuroDetour')
-    parser.add_argument('--batch_size', type=int, default=1024,
+    parser.add_argument('--batch_size', type=int, default=64,
                         help='Input batch size for training (default: 32)')
     parser.add_argument('--epochs', type=int, default = 200)
-    parser.add_argument('--models', type=str, default = 'bnt')
+    parser.add_argument('--models', type=str, default = 'none')
     parser.add_argument('--classifier', type=str, default = 'mlp')
     parser.add_argument('--max_patience', type=int, default = 50)
     parser.add_argument('--hiddim', type=int, default = 2048)
@@ -93,9 +93,9 @@ def main():
     parser.add_argument('--atlas', type=str, default = 'AAL_116')
     parser.add_argument('--dataname', type=str, default = 'ppmi')
     parser.add_argument('--testname', type=str, default = 'None')
-    parser.add_argument('--node_attr', type=str, default = 'FC')
+    parser.add_argument('--node_attr', type=str, default = 'BOLD')
     parser.add_argument('--adj_type', type=str, default = 'FC')
-    parser.add_argument('--bold_winsize', type=int, default = 500)
+    parser.add_argument('--bold_winsize', type=int, default = 160)
     parser.add_argument('--nlayer', type=int, default = 4)
     parser.add_argument('--nhead', type=int, default = 8)
     parser.add_argument('--classifier_aggr', type=str, default = 'learn')
@@ -108,7 +108,7 @@ def main():
     parser.add_argument('--only_dataload', action='store_true')
     parser.add_argument('--cv_fold_n', type=int, default = 10)
     parser.add_argument('--decoder', action='store_true')
-    parser.add_argument('--decoder_layer', type=int, default = 8)
+    parser.add_argument('--decoder_layer', type=int, default = 32)
     parser.add_argument('--train_obj', type=str, default = 'y')
     parser.add_argument('--few_shot', type=float, default = 1)
     parser.add_argument('--force_2class', action='store_true')
@@ -120,6 +120,8 @@ def main():
     device = args.device
     hiddim = args.hiddim
     nclass = DATA_CLASS_N[args.dataname]
+    if args.train_obj == 'sex':
+        nclass = 2
     if args.force_2class:
         nclass = 2
     dataset = None
@@ -159,10 +161,11 @@ def main():
         'sz-diana': 10,
     }
     foldi = 0
-    _foldi = 0
-    # for foldi in range(5):
-    while foldi < 5 and _foldi < _nfold[args.dataname]:
-        _foldi += 1
+    # _foldi = 0
+    for foldi in range(_nfold[args.dataname]):
+        _foldi = foldi
+    # while foldi < 5 and _foldi < _nfold[args.dataname]:
+    #     _foldi += 1
     # for i in range(args.cv_fold_n):
         dataloaders = dataloader_generator(batch_size=args.batch_size, nfold=_foldi, dataset=dataset, few_shot=args.few_shot,#, total_fold=args.cv_fold_n
                                                                  node_attr=args.node_attr, adj_type=args.adj_type, transform=transform, dname=args.dataname, testset=testset,
@@ -172,7 +175,7 @@ def main():
             train_loader, val_loader, dataset = dataloaders
         else:
             train_loader, val_loader, dataset, test_loader, testset = dataloaders
-        uni_label = torch.cat([data['y'] for data in val_loader]).unique()
+        uni_label = torch.cat([data[args.train_obj] for data in val_loader]).unique()
         if args.force_2class: uni_label = uni_label[uni_label<=1]
         print(uni_label)
         if len(uni_label) == 1: continue
@@ -184,7 +187,7 @@ def main():
         if not args.decoder:
             classifier = Classifier(CLASSIFIER_BANK[args.classifier], hiddim, nlayer=args.decoder_layer, nclass=nclass, node_sz=node_sz if args.models!='braingnn' else braingnn_nodesz(node_sz, model.ratio), aggr=args.classifier_aggr).to(device)
         else:
-            classifier = BNDecoder(hiddim, nclass=nclass, node_sz=node_sz if args.models!='braingnn' else braingnn_nodesz(node_sz, model.ratio), nlayer=args.decoder_layer, head_num=8, return_intermediate=False).to(device)
+            classifier = BNDecoder(hiddim, nclass=nclass, train_obj=args.train_obj, node_sz=node_sz if args.models!='braingnn' else braingnn_nodesz(node_sz, model.ratio), nlayer=args.decoder_layer, head_num=8, return_intermediate=False).to(device)
         optimizer = optim.Adam(list(model.parameters()) + list(classifier.parameters()), lr=args.lr, weight_decay=args.decay) 
         # optimizer = optim.SGD(list(model.parameters()) + list(classifier.parameters()), lr=args.lr, weight_decay=args.decay) 
         # print(optimizer)
@@ -339,8 +342,8 @@ def train(model, classifier, device, loader, optimizer, force_2class=False):
     model.train()
     classifier.train()
     losses = []
-    y_true_dict = {k: [] for k in LOSS_FUNCS}
-    y_scores_dict = {k: [] for k in LOSS_FUNCS}
+    y_true_dict = {}#{k: [] for k in LOSS_FUNCS}
+    y_scores_dict = {}#{k: [] for k in LOSS_FUNCS}
     # loss_fn = nn.CrossEntropyLoss()
     # for step, batch in enumerate(tqdm(loader, desc="Iteration")):
     for step, batch in enumerate(loader):
@@ -362,14 +365,17 @@ def train(model, classifier, device, loader, optimizer, force_2class=False):
             y['y'] = y['y'][_2cls_ind]
             batch.y = batch.y[_2cls_ind]
         loss = 0
-        for k in LOSS_FUNCS:
+        for k in y:
             loss += LOSS_W[k]*LOSS_FUNCS[k](y[k][batch[k] != -1], batch[k][batch[k] != -1])
         if hasattr(model, 'loss'):
             loss = loss + model.loss
         loss.backward()
         optimizer.step()
         losses.append(loss.detach().cpu().item())
-        for k in LOSS_FUNCS:
+        for k in y:
+            if k not in y_true_dict: 
+                y_true_dict[k] = []
+                y_scores_dict[k] = []
             y_true_dict[k].append(batch[k][batch[k] != -1])
             y_scores_dict[k].append(y[k][batch[k] != -1].detach().cpu())
     
@@ -393,8 +399,8 @@ def eval(model, classifier, device, loader, force_2class=False):
     classifier.eval()
     # y_true = []
     # y_scores = []
-    y_true_dict = {k: [] for k in LOSS_FUNCS}
-    y_scores_dict = {k: [] for k in LOSS_FUNCS}
+    y_true_dict = {}#{k: [] for k in LOSS_FUNCS}
+    y_scores_dict = {}#{k: [] for k in LOSS_FUNCS}
 
     # for step, batch in enumerate(tqdm(loader, desc="Iteration")):
     for step, batch in enumerate(loader):
@@ -428,7 +434,10 @@ def eval(model, classifier, device, loader, force_2class=False):
     # prec, rec, f1, _ = precision_recall_fscore_support(y_true, y_scores, average='weighted')
     # return acc, prec, rec, f1
 
-        for k in LOSS_FUNCS:
+        for k in y:
+            if k not in y_true_dict: 
+                y_true_dict[k] = []
+                y_scores_dict[k] = []
             y_true_dict[k].append(batch[k][batch[k] != -1])
             y_scores_dict[k].append(y[k][batch[k] != -1].detach().cpu())
 

@@ -6,4 +6,10 @@ logs2/
 logs3/
 model_weights/
 resources/
+beca_map/
 nohup.out
+*.txt
+*.log
+*.png
+*.svg
+*.npy

@@ -9,7 +9,7 @@ from typing import Optional, List
 
 class BNDecoder(nn.Module):
 
-    def __init__(self, feat_dim, nclass, node_sz, nlayer=2, dropout=0.1, head_num=8, hid_dim=768, activation="relu", normalize_before=False, obj_num=3, return_intermediate=True, finetune=False, finetune_nclass=None, finetune_tokenid=None, *args, **kwargs) -> None:
+    def __init__(self, feat_dim, nclass, node_sz, nlayer=2, train_obj='y', dropout=0.1, head_num=8, hid_dim=768, activation="relu", normalize_before=False, obj_num=3, return_intermediate=True, finetune=False, finetune_nclass=None, finetune_tokenid=None, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.node_sz = node_sz
         # self.obj_num = obj_num
@@ -17,6 +17,7 @@ class BNDecoder(nn.Module):
         self.nclass = nclass
         self.hid_dim = hid_dim
         self.head_num = head_num
+        self.train_obj = train_obj
         # self.object_query = torch.nn.Embedding(obj_num, feat_dim)#nn.Parameter(torch.randn(obj_num, self.hid_dim))
         self.object_query = torch.nn.Embedding(nclass+2+1, feat_dim)
         # self.decoder = nn.ModuleList([torch.nn.TransformerDecoder(
@@ -70,9 +71,11 @@ class BNDecoder(nn.Module):
             if return_cross_attn:
                 attn = attn[..., self.finetune_tokenid,:]
         if not return_cross_attn:
-            return {'y': logits, 'sex': sex, 'age': age}
+            return {self.train_obj: logits}
+            # return {self.train_obj: logits, 'sex': sex, 'age': age}
         else:
-            return {'y': logits, 'sex': sex, 'age': age, 'attn': attn}
+            # return {self.train_obj: logits, 'sex': sex, 'age': age, 'attn': attn}
+            return {self.train_obj: logits, 'attn': attn}
 
 
 class Classifier(nn.Module):

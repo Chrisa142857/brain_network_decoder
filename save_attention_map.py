@@ -111,7 +111,7 @@ def main():
     parser.add_argument('--cv_fold_n', type=int, default = 10)
     parser.add_argument('--decoder', action='store_true')
     parser.add_argument('--decoder_layer', type=int, default = 32)
-    parser.add_argument('--datanames', nargs='+', default = ['ppmi'], required=False)
+    parser.add_argument('--datanames', nargs='+', default = ['sz-diana'], required=False)
     parser.add_argument('--pretrained_datanames', nargs='+', default = ['ppmi','abide','taowu','neurocon','hcpa','adni','hcpya'], required=False)
     parser.add_argument('--load_dname', type=str, default = 'hcpa', required=False)
 
@@ -120,11 +120,12 @@ def main():
     print(args)
     # expdate = str(datetime.now())
     # expdate = expdate.replace(':','-').replace(' ', '-').replace('.', '-')
-    load_dname = 'ppmi'
+    load_dname = args.load_dname
+    # load_dname = 'ppmi'
     device = args.device
     hiddim = args.hiddim
     # nclass = DATA_CLASS_N[args.dataname]
-    dataset = {'adni': None,'hcpa': None,'hcpya': None,'abide': None,'ppmi': None,'taowu': None,'neurocon': None}
+    dataset = {'adni': None,'hcpa': None,'hcpya': None,'abide': None,'ppmi': None,'taowu': None,'neurocon': None, 'sz-diana': None}
     # Initialize lists to store evaluation metrics
     accuracies_dict = {}
     f1_scores_dict = {}
@@ -223,7 +224,11 @@ def main():
             if head_loaded and bb_loaded: break
         assert bb_loaded and head_loaded, f'{mweight_fn}/bb_fold{i}_{load_dname}Best_'
         print(datetime.now(), 'Done')
-        
+        optimizer = optim.Adam(list(model.parameters()) + list(classifier.parameters()), lr=args.lr, weight_decay=args.decay) 
+        for epoch in range(10):
+            print(datetime.now(), 'train start')
+            train(model, classifier, device, train_loader, optimizer, epoch)
+            print(datetime.now(), 'train done, test start')
         for dname in val_loader:
             one_val_loader = val_loader[dname]
             attn, gt = eval(model, classifier, device, one_val_loader, dname=dname)
@@ -248,10 +253,155 @@ def main():
         plt.close()
         # break
         for k in avg_attn:
+            if len(avg_attn[k]) == 0: continue
             attn = np.stack(avg_attn[k]).mean(0)[k].tolist()
             attn = [str(a*10) for a in attn]
             with open(f'{load_dname}_attn_val-fold{i}_label{k}.txt', 'w') as f:
                 f.write('\n'.join(attn))
+
+def train(model, classifier, device, loader, optimizer, epoch, force_2class=False):
+    model.train()
+    classifier.train()
+    losses = []
+    y_true_dict = [{} for i in range(len(loader.dataset.dataset.nclass_list)+len(LOSS_FUNCS)-1)]
+    y_scores_dict = [{} for i in range(len(loader.dataset.dataset.nclass_list)+len(LOSS_FUNCS)-1)]
+    # loss_fn = nn.CrossEntropyLoss()
+    # for step, batch in enumerate(tqdm(loader, desc="Iteration")):
+    for step, batch in enumerate(loader):
+        optimizer.zero_grad()
+        batch = batch.to(device)
+        feat = model(batch)
+        edge_index = batch.edge_index
+        batchid = batch.batch
+        if len(feat) == 3:  # brainGnn Selected Topk nodes
+            feat, edge_index, batchid = feat
+        y = classifier(feat, edge_index, batchid)
+        loss = 0
+        for k in LOSS_FUNCS:
+            if k == 'y':
+                pre_nclass_i = 0
+                for nclassi, nclass in enumerate(loader.dataset.dataset.nclass_list):
+                    # _nclass = nclass
+                    # if force_2class: _nclass = 3
+                    one_gt = batch[k][:, nclassi]
+                    one_y = y[k][..., pre_nclass_i:pre_nclass_i+nclass]
+                    if len(one_y.shape) == 3:
+                        one_y = one_y[:, one_gt != -1]                    
+                        one_gt = one_gt[one_gt != -1]
+                        if epoch > 5:
+                            one_yi = torch.arange(one_y.shape[1])
+                            layeri = one_y[:, one_yi, one_gt].argmax(0)
+                            one_y = one_y[layeri, one_yi]
+                        else:
+                            one_y = one_y.mean(0)
+                    else:
+                        one_y = one_y[one_gt != -1]
+                        one_gt = one_gt[one_gt != -1]
+                    if force_2class:
+                        # print(one_y.shape)
+                        one_y = one_y[one_gt <= 2]
+                        one_gt = one_gt[one_gt <= 2]
+                        # print(one_y.shape)
+                        # exit()
+                    loss += LOSS_W[k]*LOSS_FUNCS[k](one_y, one_gt)
+                    pre_nclass_i += nclass
+            else: # sex or age
+                one_gt = batch[k]
+                one_y = y[k]
+                if len(one_y.shape) == 3:
+                    one_y = one_y[:, one_gt != -1]                    
+                    one_gt = one_gt[one_gt != -1]
+                    if epoch > 5 and k != 'age':
+                        one_yi = torch.arange(one_y.shape[1])
+                        layeri = one_y[:, one_yi, one_gt].argmax(0)
+                        one_y = one_y[layeri, one_yi]
+                    else:
+                        one_y = one_y.mean(0)
+                else:
+                    one_y = one_y[one_gt != -1]
+                    one_gt = one_gt[one_gt != -1]
+
+                loss += LOSS_W[k]*LOSS_FUNCS[k](one_y, one_gt)
+            # print(k, y[k].shape, loss)
+        
+        # exit()
+        if hasattr(model, 'loss'):
+            loss = loss + model.loss
+        loss.backward()
+        optimizer.step()
+        losses.append(loss.detach().cpu().item())
+        pre_nclass_i = 0
+        for nclassi, nclass in enumerate(loader.dataset.dataset.nclass_list):   
+            # _nclass = nclass
+            # if force_2class: _nclass = 3
+            for k in LOSS_FUNCS:
+                if k != 'y': continue
+                one_gt = batch[k][:, nclassi]
+                one_y = y[k][..., pre_nclass_i:pre_nclass_i+nclass]
+                if len(one_y.shape) == 3:
+                    one_y = one_y[:, one_gt != -1].max(0)[0]
+                else:
+                    one_y = one_y[one_gt != -1]
+                one_gt = one_gt[one_gt != -1]
+                if k not in y_true_dict[nclassi]: 
+                    y_true_dict[nclassi][k] = []
+                    y_scores_dict[nclassi][k] = []
+                y_true_dict[nclassi][k].append(one_gt.detach().cpu())
+                y_scores_dict[nclassi][k].append(one_y.detach().cpu())
+            pre_nclass_i += nclass
+        
+        nclassi = len(loader.dataset.dataset.nclass_list)
+        for k in LOSS_FUNCS:
+            if k == 'y': continue
+            one_gt = batch[k]
+            one_y = y[k]
+            if len(one_y.shape) == 3:
+                if k == 'age':
+                    one_y = one_y[:, one_gt != -1].mean(0)
+                else:
+                    one_y = one_y[:, one_gt != -1].max(0)[0]
+            else:
+                one_y = one_y[one_gt != -1]
+            one_gt = one_gt[one_gt != -1]
+            if k not in y_true_dict[nclassi]: 
+                y_true_dict[nclassi][k] = []
+                y_scores_dict[nclassi][k] = []
+            y_true_dict[nclassi][k].append(one_gt.detach().cpu())
+            y_scores_dict[nclassi][k].append(one_y.detach().cpu())
+            nclassi += 1
+    # print([_y_true_dict.keys() for _y_true_dict in y_true_dict])
+    logs = [f'Train loss: {np.mean(losses):.6f}']
+    for di, dname in enumerate(loader.dataset.dataset.dnames):
+        di = loader.dataset.dataset.dname2tokenid[dname]
+        for k in y_true_dict[di]:
+            assert k == 'y', f'{k},{di},{dname},{len(y_true_dict)}'
+            y_true = torch.cat(y_true_dict[di][k], dim = 0).detach().cpu()
+            y_scores = torch.cat(y_scores_dict[di][k], dim = 0).detach().cpu()
+            if force_2class:
+                y_scores = y_scores[y_true <= 2]
+                y_true = y_true[y_true <= 2]
+            y_true = y_true.numpy()
+            y_scores = y_scores.numpy().argmax(1)
+            acc = accuracy_score(y_true, y_scores)
+            prec, rec, f1, _ = precision_recall_fscore_support(y_true, y_scores, average='weighted')
+            logs.append(f'{dname}-{k}-Accuracy: {acc:.6f}')
+            
+    for di in range(len(loader.dataset.dataset.nclass_list), len(y_true_dict)):
+        dname = 'All'
+        for k in y_true_dict[di]:
+            assert k != 'y', k
+            y_true = torch.cat(y_true_dict[di][k], dim = 0).detach().cpu()
+            y_scores = torch.cat(y_scores_dict[di][k], dim = 0).detach().cpu()
+            if k != 'age':
+                y_true = y_true.numpy()
+                y_scores = y_scores.numpy().argmax(1)
+                acc = accuracy_score(y_true, y_scores)
+                prec, rec, f1, _ = precision_recall_fscore_support(y_true, y_scores, average='weighted')
+                logs.append(f'{dname}-{k}-Accuracy: {acc:.6f}')
+            else:
+                logs.append(f'{dname}-{k}-MSE: {torch.nn.functional.mse_loss(y_scores, y_true):.6f}')
+    
+    print(', '.join(logs))
 
 def eval(model, classifier, device, loader, dname=None):
     model.eval()
