@@ -18,15 +18,15 @@ from torch_geometric.data import Data
 ATLAS_FACTORY = ['AAL_116', 'Aicha_384', 'Gordon_333', 'Brainnetome_264', 'Shaefer_100', 'Shaefer_200', 'Shaefer_400', 'D_160']
 BOLD_FORMAT = ['.csv', '.csv', '.tsv', '.csv', '.tsv', '.tsv', '.tsv', '.txt']
 DATAROOT = {
-    'adni': '/ram/USERS/ziquanw/detour_hcp/data',
-    'oasis': '/ram/USERS/ziquanw/detour_hcp/data',
-    'hcpa': '/ram/USERS/bendan/ACMLab_DATA',
-    'ukb': '/ram/USERS/ziquanw/data',
-    'hcpya': '/ram/USERS/ziquanw/data',
-    'ppmi': '/ram/USERS/jiaqi/benchmark_fmri/data/PPMI',
-    'abide': '/ram/USERS/jiaqi/benchmark_fmri/data/ABIDE',
-    'neurocon': '/ram/USERS/bendan/ACMLab_DATA/All_Dataset/neurocon/neurocon',
-    'taowu': '/ram/USERS/bendan/ACMLab_DATA/All_Dataset/taowu/taowu',
+    'adni': '../detour_hcp/data',
+    'oasis': '../detour_hcp/data',
+    'hcpa': '../Lab_DATA',
+    'ukb': '../data',
+    'hcpya': '../data',
+    'ppmi': '../benchmark_fmri/data/PPMI',
+    'abide': '../benchmark_fmri/data/ABIDE',
+    'neurocon': '../Lab_DATA/All_Dataset/neurocon/neurocon',
+    'taowu': '../Lab_DATA/All_Dataset/taowu/taowu',
 }
 DATANAME = {
     'adni': 'ADNI_BOLD_SC',
@@ -167,8 +167,8 @@ class NeuroNetworkDataset(Dataset):
             self.data['label_name'] = nln
             self.label_remap = {restli: 0, 0: restli}
 
-        if os.path.exists(f'/ram/USERS/ziquanw/data/meta_data/{dname.upper()}_metadata.csv'):
-            meta_data = pd.read_csv(f'/ram/USERS/ziquanw/data/meta_data/{dname.upper()}_metadata.csv')
+        if os.path.exists(f'../data/meta_data/{dname.upper()}_metadata.csv'):
+            meta_data = pd.read_csv(f'../data/meta_data/{dname.upper()}_metadata.csv')
             self.subj2sex = {
                 subj: np.unique(meta_data[meta_data['Subject']==subj]['Sex']).item()
             for subj in self.data_subj if subj in list(meta_data['Subject'])}
@@ -428,8 +428,8 @@ class Dataset_PPMI_ABIDE(Dataset):
         self.label_names = [l for l in self.label_names if l is not None]
         self.cached_data = [None for _ in range(len(self.data_path))]
         self.data_subj = np.unique(self.subject)
-        if os.path.exists(f'/ram/USERS/ziquanw/data/meta_data/{dname.upper()}_metadata.csv'):
-            meta_data = pd.read_csv(f'/ram/USERS/ziquanw/data/meta_data/{dname.upper()}_metadata.csv')
+        if os.path.exists(f'../data/meta_data/{dname.upper()}_metadata.csv'):
+            meta_data = pd.read_csv(f'../data/meta_data/{dname.upper()}_metadata.csv')
             self.subj2sex = {
                 subj: np.unique(meta_data[meta_data['Subject']==int(re.findall(r"[-+]?\d*\.\d+|\d+", subj)[0])]['Sex']).item()
             for subj in self.data_subj if int(re.findall(r"[-+]?\d*\.\d+|\d+", subj)[0]) in list(meta_data['Subject'])}

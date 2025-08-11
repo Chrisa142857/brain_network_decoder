@@ -1,6 +1,6 @@
 ## Codes for the large connectome model (LCM).
 
-The official implementation of paper "Large Connectome Model: An fMRI Foundation Model of Brain Connectomes Powered by Brain-Environment Interactions".
+The official implementation of paper "Large Connectome Model: An fMRI Foundation Model of Brain Connectomes Empowered by Brain-Environment Interaction in Multitask Learning Landscape". Pre-trained model weights can be found here: [https://drive.google.com/drive/folders/1vEIB6qb5djrQXLuRYeLrkF2i27m4QNgo?usp=sharing](https://drive.google.com/drive/folders/1vEIB6qb5djrQXLuRYeLrkF2i27m4QNgo?usp=sharing).
 
 ### File structure
 
